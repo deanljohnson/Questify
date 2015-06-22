@@ -3,18 +3,22 @@
  */
 
 var QUESTIFY = (function (QUESTIFY) {
-	function createMotivation (name, chance, strategies) {
+	"use strict";
+	function createMotivation (strategies) {
 		var that = {};
 		strategies = strategies || [];
 
-		that.name = name;
-		that.chance = chance;
 		that.strategies = strategies;
 
 		//Since the array of strategies is not sensitive to order,
 		//this method shouldn't introduce any complications
 		that.addStrategy = function(strat) {
 			strategies.push(strat);
+		};
+
+		that.selectStrategy = function() {
+			var index = Math.floor(Math.random() * strategies.length);
+			return strategies[index];
 		};
 
 		return that;
