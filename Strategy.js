@@ -3,12 +3,11 @@
  */
 
 var QUESTIFY = (function (QUESTIFY) {
-	function createStrategy (name, chance, actions) {
+	"use strict";
+	function createStrategy (actions) {
 		var that = {};
 		actions = actions || [];
 
-		that.name = name;
-		that.chance = chance;
 		that.actions = actions;
 
 		return that;
