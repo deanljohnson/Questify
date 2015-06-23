@@ -16,15 +16,9 @@ var QUESTIFY = (function (QUESTIFY) {
 			for (var a = 0, al = actions.length; a < al; a++) {
 				action = actions[a];
 				if (!action.isFinished()) {
-					if (!action.isStarted() && action.preConditionMet()) {
-						action.start();
-					}
-
-					if (action.isStarted() && action.postConditionMet()) {
-						action.finish();
-					} else {
+					action.update();
+					if (!action.isFinished()) {
 						anyUnfinished = true;
-						break;
 					}
 				}
 			}
