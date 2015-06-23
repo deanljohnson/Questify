@@ -4,67 +4,22 @@
 
 var QUESTIFY = (function (QUESTIFY) {
 	"use strict";
-	function createAtomicAction (conditions) {
-		var that = {},
-			started = false,
-			finished = false;
+	function createAtomicAction (conditionFunctions) {
+		var that = {};
 
-		that.conditions = conditions;
+		that.conditions = conditionFunctions;
 
-		that.start = function () {
-			started = true;
-		};
-
-		that.forceFinish = function () {
-			finished = true;
-		};
-
-		that.isStarted = function () {
-			return started === true;
-		};
-
-		that.isFinished = function () {
-			return finished === true;
-		};
-
-		that.update = function() {
-			finished = true;
-
-			if (!this.isStarted()) { this.start(); }
+		that.update = function(conditionArrArr) {
+			var finished = true;
 
 			for (var c = 0, cl = this.conditions.length; c < cl; c++) {
-				if (this.conditions[c]() !== true) {
+				if (this.conditions[c].apply(this, conditionArrArr[c]) !== true) {
 					finished = false;
+					return;
 				}
 			}
 
 			return finished;
-		};
-
-		that.withArguments = function(conditionArguments) {
-			var newValue = {};
-
-			//Rebinding the conditions creates new functions,
-			//guaranteeing we aren't going to overwrite functions
-			newValue.conditions = (function (bindTo, conditionsArg) {
-				var boundConditions = [];
-				for (var c = 0, cl = conditionsArg.length; c < cl; c++) {
-					boundConditions.push(conditionsArg[c].bind(bindTo));
-				}
-				return boundConditions;
-			}(this, this.conditions));
-
-			newValue.start = this.start;
-			newValue.forceFinish = this.forceFinish;
-			newValue.isStarted = this.isStarted;
-			newValue.isFinished = this.isFinished;
-			newValue.update = this.update;
-			newValue.started = false;
-			newValue.finished = false;
-
-			newValue.conditionArguments = conditionArguments;
-
-			return newValue;
 		};
 
 		return that;
