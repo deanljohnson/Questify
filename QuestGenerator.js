@@ -16,66 +16,73 @@ var QUESTIFY = (function (QUESTIFY) {
 			return subjectNPC.motivations[index];
 		}
 
-		function parseBindAndAssignArguments(bindTarget, valuesObj, givenArguments, otherNPCs, enemies, locations, objects) {
-			var argument, pieces, type, id, prop, optionsArr;
+		function parseArgument(arg, variablesObj, otherNPCs, enemies, locations, objects) {
+			var pieces = arg.split(':'),
+				type = pieces[0],
+				id = pieces[1],
+				prop = pieces.length > 2 ? pieces[2] : "NULL PROP",
+				optionsArr = [];
 
-			for (var p = 0, pl = givenArguments.length; p < pl; p++) {
-				argument = givenArguments[p]; //The specific argument we are working on
-				pieces = argument.split(":");
-
-				type = pieces[0]; //The type the user has assigned to this argument
-				id = pieces[1]; //The id the user has given to this argument
-				prop = pieces[2]; //The property of the id to use as an argument
-
-				//Create the value if it is not present
-				if (!valuesObj.hasOwnProperty(id)) {
-					//Set the array to use for randomly picking a source for this value
-					switch (type) {
-						case "NPC":
-							optionsArr = otherNPCs;
-							break;
-						case "ENEMY":
-							optionsArr = enemies;
-							break;
-						case "LOC":
-							optionsArr = locations;
-							break;
-						case "OBJ":
-							optionsArr = objects;
-							break;
-						default:
-							console.log("Undefined type assigned to an action argument");
-							break;
-					}
-
-					//create a new variable, randomly selected from the appropriate array
-					valuesObj[id] = optionsArr[(Math.floor(Math.random() * optionsArr.length))];
-				}
-
-				if (valuesObj[id].hasOwnProperty(prop)) {
-					bindTarget = bindTarget.bind(null, valuesObj[id][prop]);
-					continue;
-				}
-
-				bindTarget = bindTarget.bind(null, valuesObj[id]);
+			if (pieces.length < 2) {
+				console.log("id not assigned to an action argument");
 			}
 
-			return bindTarget;
+			if (variablesObj.hasOwnProperty(id)) {
+				if (prop !== 'NULL PROP' && variablesObj[id].hasOwnProperty(prop)) {
+					return variablesObj[id][prop];
+				}
+
+				return variablesObj[id];
+			} else {
+				//Create the new object
+				switch (type) {
+					case "NPC":
+						optionsArr = otherNPCs;
+						break;
+					case "ENEMY":
+						optionsArr = enemies;
+						break;
+					case "LOC":
+						optionsArr = locations;
+						break;
+					case "OBJ":
+						optionsArr = objects;
+						break;
+					default:
+						console.log("Undefined type assigned to an action argument");
+						break;
+				}
+
+				//create a new variable, randomly selected from the appropriate array
+				variablesObj[id] = optionsArr[(Math.floor(Math.random() * optionsArr.length))];
+			}
+
+			if (prop !== 'NULL PROP' && variablesObj[id].hasOwnProperty(prop)) {
+				return variablesObj[id][prop];
+			}
+
+			return variablesObj[id];
 		}
 
-		function bindActionArguments(action, variables, otherNPCs, enemies, locations, objects) {
-			if (action.hasOwnProperty("actions")) {
+		function parseActionArgs(actionArgs, variablesObj, otherNPCs, enemies, locations, objects) {
+			var actionArgsAsObjects = [],
+				conditionArgsAsObjects = [];
 
-			} else {
-				//Recreate so we don't overwrite the base actions
-				action = QUESTIFY.createAtomicAction(action.conditions).withArguments(action.conditionArguments);
+			//Loops through the conditions for the action
+			for (var c = 0, cl = actionArgs.length; c < cl; c++) {
+				var currentConditionArgsArr = actionArgs[c];
+				conditionArgsAsObjects = [];
 
-				for (var c = 0, cl = action.conditions.length; c < cl; c++) {
-					action.conditions[c] = parseBindAndAssignArguments(action.conditions[c], variables, action.conditionArguments[c], otherNPCs, enemies, locations, objects);
+				for (var a = 0, al = currentConditionArgsArr.length; a < al; a++) {
+					var currentArg = currentConditionArgsArr[a];
+
+					conditionArgsAsObjects.push(parseArgument(currentArg, variablesObj, otherNPCs, enemies, locations, objects));
 				}
+
+				actionArgsAsObjects.push(conditionArgsAsObjects);
 			}
 
-			return action;
+			return actionArgsAsObjects;
 		}
 
 		that.motivations = motivations;
@@ -87,21 +94,30 @@ var QUESTIFY = (function (QUESTIFY) {
 		that.generateQuest = function(player, subjectNPC, otherNPCs, enemies, locations, objects, forcedStrategy) {
 			var motivation = selectMotivation(subjectNPC),
 				strategy = forcedStrategy || motivation.selectStrategy(),
-				action,
+				currentActionsAndArgsObj,
+				actionString,
+				actionArgs,
 				actions = [],
-				variables = {pc: player, giver: subjectNPC, start: subjectNPC.location},
+				argsArr = [],
+				variablesObj = {pc: player, giver: subjectNPC, start: subjectNPC.location},
 				s, sl;
 
-			//Define any variable needed for arguments and bind the action functions to those values
-			for (s = 0, sl = strategy.actions.length; s < sl; s++) {
-				action = strategy.actions[s];
+			//For every action in the strategy, get it's action function and the arguments to that action
+			for (s = 0, sl = strategy.actionsAndArgs.length; s < sl; s++) {
+				currentActionsAndArgsObj = strategy.actionsAndArgs[s];
 
-				action = bindActionArguments(action, variables, otherNPCs, enemies, locations, objects);
+				if (currentActionsAndArgsObj.hasOwnProperty('atomicAction')) {
+					//Add the current action for this quest
+					actionString = currentActionsAndArgsObj.atomicAction;
+					actions.push(this.atomicActions[actionString]);
 
-				actions.push(action);
+					//Now add it's arguments
+					actionArgs = currentActionsAndArgsObj.actionArgs;
+					argsArr.push(parseActionArgs(actionArgs, variablesObj, otherNPCs, enemies, locations, objects));
+				}
 			}
 
-			return QUESTIFY.createQuest(actions, variables);
+			return QUESTIFY.createQuest(actions, argsArr);
 		};
 
 		return that;
