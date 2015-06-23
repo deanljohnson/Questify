@@ -7,7 +7,7 @@ var QUESTIFY = (function (QUESTIFY) {
 	function createCompoundAction (preCondition, postCondition, subActions) {
 		var that = QUESTIFY.createAtomicAction(preCondition, postCondition);
 
-		that.subActions = subActions;
+		that.actions = actions;
 
 		that.isFinished = function() {
 			if (!(that.finished === true)) { return false; }
@@ -35,7 +35,7 @@ var QUESTIFY = (function (QUESTIFY) {
 			newValue.preConditionArguments = pre;
 			newValue.postConditionArguments = post;
 
-			newValue.subActions = this.subActions;
+			newValue.actions = this.actions;
 
 			return newValue;
 		};
