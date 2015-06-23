@@ -7,7 +7,7 @@ var USERTEST = (function (USERTEST) {
 	function createLocationBase(pos, name) {
 		var that = {};
 
-		that.position = pos;
+		that.position = pos || "0:0";
 		that.name = name || "";
 
 		return that;
