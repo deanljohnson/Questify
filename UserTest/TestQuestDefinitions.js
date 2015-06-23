@@ -57,33 +57,38 @@ var char = USERTEST.createNPCBase(),
 }());
 
 (function createAtomicActions(){
-	questGen.atomicActions.goto = QUESTIFY.createAtomicAction(questGen.conditionFunctions.checkIfCharKnowsInformation,
-														      questGen.conditionFunctions.checkIfCharIsAtLocation);
-	questGen.atomicActions.kill = QUESTIFY.createAtomicAction(questGen.conditionFunctions.checkIfCharIsAtLocation,
-															  questGen.conditionFunctions.checkIfCharIsDead);
-	questGen.atomicActions.report = QUESTIFY.createAtomicAction(questGen.conditionFunctions.checkIfCharIsAtLocation,
-														        questGen.conditionFunctions.checkIfCharKnowsInformation);
-	questGen.atomicActions.capture = QUESTIFY.createAtomicAction(questGen.conditionFunctions.checkIfCharIsAtLocation,
-														         questGen.conditionFunctions.checkIfCharHasPrisoner);
-	questGen.atomicActions.give = QUESTIFY.createAtomicAction(questGen.conditionFunctions.checkIfCharIsAtLocationAndWantsItem,
-															  questGen.conditionFunctions.checkIfCharHasItem);
-	questGen.atomicActions.take = QUESTIFY.createAtomicAction(questGen.conditionFunctions.checkIfCharIsAtLocationAndHasItem,
-															  questGen.conditionFunctions.checkIfCharHasItemAndOtherDoesNot);
-	questGen.atomicActions.gather = QUESTIFY.createAtomicAction(questGen.conditionFunctions.checkIfItemIsAtLocation,
-							                                    questGen.conditionFunctions.checkIfCharHasItem);
-	questGen.atomicActions.listen = QUESTIFY.createAtomicAction(questGen.conditionFunctions.checkIfCharIsAtLocationAndKnowsInformation,
-																questGen.conditionFunctions.checkIfCharKnowsInformation);
+	questGen.atomicActions.goto = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation]);
+
+	questGen.atomicActions.kill = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,
+															  questGen.conditionFunctions.checkIfCharIsDead]);
+
+	questGen.atomicActions.report = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,
+														        questGen.conditionFunctions.checkIfCharKnowsInformation]);
+
+	questGen.atomicActions.capture = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasPrisoner]);
+
+	questGen.atomicActions.give = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasItem]);
+
+	questGen.atomicActions.take = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasItemAndOtherDoesNot]);
+
+	questGen.atomicActions.gather = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,
+							                                    questGen.conditionFunctions.checkIfCharHasItem]);
+
+	questGen.atomicActions.listen = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharKnowsInformation]);
 }());
 
 (function createStrategies(){
-	questGen.strategies.killEnemy = QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments(["DEF:pc", "ENEMY:enemy:location"], ["DEF:pc", "ENEMY:enemy:location"]),
-															 questGen.atomicActions.kill.withArguments(["DEF:pc", "ENEMY:enemy:location"], ["ENEMY:enemy"]),
-															 questGen.atomicActions.goto.withArguments(["DEF:pc", "DEF:start"], ["DEF:pc", "DEF:start"]),
-														     questGen.atomicActions.report.withArguments(["DEF:giver", "DEF:start"], ["DEF:giver", "ENEMY:enemy"])]);
-	questGen.strategies.explore = QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments(["DEF:pc", "LOC:poi"], ["DEF:pc", "LOC:poi"]),
-														   questGen.atomicActions.goto.withArguments(["DEF:pc", "DEF:start"], ["DEF:pc", "DEF:start"])]);
-	questGen.strategies.goAndLearn = QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments(["DEF:pc", "NPC:otherNPC:location"], ["DEF:pc:location", "NPC:otherNPC:location"]),
-															  questGen.atomicActions.listen.withArguments(["NPC:otherNPC", "DEF:pc:location", "LOC:locInfo"], ["DEF:pc", "LOC:locInfo"])]);
+	questGen.strategies.killEnemy =
+		QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments([["DEF:pc", "ENEMY:enemy:location"]]),
+								 questGen.atomicActions.kill.withArguments([["DEF:pc", "ENEMY:enemy:location"], ["ENEMY:enemy"]]),
+								 questGen.atomicActions.goto.withArguments([["DEF:pc", "DEF:start"]]),
+								 questGen.atomicActions.report.withArguments([["DEF:giver", "DEF:pc:location"], ["DEF:giver", "ENEMY:enemy"]])]);
+	questGen.strategies.explore =
+		QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments([["DEF:pc", "LOC:poi"], ["DEF:pc", "LOC:poi"]]),
+								 questGen.atomicActions.goto.withArguments([["DEF:pc", "DEF:start"], ["DEF:pc", "DEF:start"]])]);
+	questGen.strategies.goAndLearn =
+		QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments([["DEF:pc", "NPC:otherNPC:location"], ["DEF:pc:location", "NPC:otherNPC:location"]]),
+								 questGen.atomicActions.listen.withArguments([["DEF:pc", "LOC:locInfo"]])]);
 }());
 
 (function createMotivations(){
