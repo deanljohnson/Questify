@@ -4,26 +4,18 @@
 
 var QUESTIFY = (function (QUESTIFY) {
 	"use strict";
-	function createAtomicAction (preCondition, postCondition) {
+	function createAtomicAction (conditions) {
 		var that = {},
 			started = false,
 			finished = false;
 
-		that.preCondition = preCondition;
-		that.postCondition = postCondition;
-
-		that.preConditionMet = function () {
-			return this.preCondition() === true;
-		};
-		that.postConditionMet = function () {
-			return this.postCondition() === true;
-		};
+		that.conditions = conditions;
 
 		that.start = function () {
 			started = true;
 		};
 
-		that.finish = function () {
+		that.forceFinish = function () {
 			finished = true;
 		};
 
@@ -35,21 +27,42 @@ var QUESTIFY = (function (QUESTIFY) {
 			return finished === true;
 		};
 
-		that.withArguments = function(pre, post) {
+		that.update = function() {
+			finished = true;
+
+			if (!this.isStarted()) { this.start(); }
+
+			for (var c = 0, cl = this.conditions.length; c < cl; c++) {
+				if (this.conditions[c]() !== true) {
+					finished = false;
+				}
+			}
+
+			return finished;
+		};
+
+		that.withArguments = function(conditionArguments) {
 			var newValue = {};
-			newValue.preCondition = this.preCondition;
-			newValue.postCondition = this.postCondition;
-			newValue.preConditionMet = this.preConditionMet;
-			newValue.postConditionMet = this.postConditionMet;
+
+			//Rebinding the conditions creates new functions,
+			//guaranteeing we aren't going to overwrite functions
+			newValue.conditions = (function (bindTo, conditionsArg) {
+				var boundConditions = [];
+				for (var c = 0, cl = conditionsArg.length; c < cl; c++) {
+					boundConditions.push(conditionsArg[c].bind(bindTo));
+				}
+				return boundConditions;
+			}(this, this.conditions));
+
 			newValue.start = this.start;
-			newValue.finish = this.finish;
+			newValue.forceFinish = this.forceFinish;
 			newValue.isStarted = this.isStarted;
 			newValue.isFinished = this.isFinished;
+			newValue.update = this.update;
 			newValue.started = false;
 			newValue.finished = false;
 
-			newValue.preConditionArguments = pre;
-			newValue.postConditionArguments = post;
+			newValue.conditionArguments = conditionArguments;
 
 			return newValue;
 		};
