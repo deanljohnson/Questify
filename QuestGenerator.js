@@ -140,7 +140,7 @@ var QUESTIFY = (function (QUESTIFY) {
 					actionArgs = currentActionsAndArgsObj.actionArgs;
 					argsArr.push(parseActionArgs(actionArgs, variablesObj, otherNPCs, enemies, locations, objects));
 
-					//If a generationAction is defined for this action, parse and execute it
+					//If an onParseAction is defined for this action, parse and execute it
 					if ('onParseAction' in currentActionsAndArgsObj) {
 						parseAndExecuteParseAction(currentActionsAndArgsObj.onParseAction, variablesObj, otherNPCs, enemies, locations, objects);
 					}
