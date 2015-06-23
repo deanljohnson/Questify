@@ -27,50 +27,37 @@ var QUESTIFY = (function (QUESTIFY) {
 				id = pieces[1]; //The id the user has given to this argument
 				prop = pieces[2]; //The property of the id to use as an argument
 
-				//These are standard values assigned automatically upon quest generation
-				if (type === "PC" || type === "GIVER" || type === "START") {
-					bindTarget = bindTarget.bind(null, valuesObj[type]);
-				} else {
-					//Create the value if it is not present
-					if (!valuesObj.hasOwnProperty(id)) {
-						//Set the array to use for randomly picking a source for this value
-						switch (type) {
-							case "NPC":
-								optionsArr = otherNPCs;
-								break;
-							case "ENEMY":
-								optionsArr = enemies;
-								break;
-							case "LOC":
-								optionsArr = locations;
-								break;
-							case "OBJ":
-								optionsArr = objects;
-								break;
-							default:
-								console.log("Undefined type assigned to an action argument");
-								break;
-						}
-
-						//create a new variable, randomly selected from the appropriate array
-						valuesObj[id] = optionsArr[(Math.floor(Math.random() * optionsArr.length))];
-
-						if (valuesObj[id].hasOwnProperty(prop)) {
-							bindTarget = bindTarget.bind(null, valuesObj[id][prop]);
-							continue;
-						} else {
-							bindTarget = bindTarget.bind(null, valuesObj[id]);
-							continue;
-						}
+				//Create the value if it is not present
+				if (!valuesObj.hasOwnProperty(id)) {
+					//Set the array to use for randomly picking a source for this value
+					switch (type) {
+						case "NPC":
+							optionsArr = otherNPCs;
+							break;
+						case "ENEMY":
+							optionsArr = enemies;
+							break;
+						case "LOC":
+							optionsArr = locations;
+							break;
+						case "OBJ":
+							optionsArr = objects;
+							break;
+						default:
+							console.log("Undefined type assigned to an action argument");
+							break;
 					}
 
-					if (valuesObj[id].hasOwnProperty(prop)) {
-						bindTarget = bindTarget.bind(null, valuesObj[id][prop]);
-						continue;
-					}
-
-					bindTarget = bindTarget.bind(null, valuesObj[id]);
+					//create a new variable, randomly selected from the appropriate array
+					valuesObj[id] = optionsArr[(Math.floor(Math.random() * optionsArr.length))];
 				}
+
+				if (valuesObj[id].hasOwnProperty(prop)) {
+					bindTarget = bindTarget.bind(null, valuesObj[id][prop]);
+					continue;
+				}
+
+				bindTarget = bindTarget.bind(null, valuesObj[id]);
 			}
 
 			return bindTarget;
@@ -96,12 +83,12 @@ var QUESTIFY = (function (QUESTIFY) {
 		that.compoundActions = compoundActions;
 		that.conditionFunctions = conditionFunctions;
 
-		that.generateQuest = function(player, subjectNPC, otherNPCs, enemies, locations, objects) {
+		that.generateQuest = function(player, subjectNPC, otherNPCs, enemies, locations, objects, forcedStrategy) {
 			var motivation = selectMotivation(subjectNPC),
-				strategy = motivation.selectStrategy(),
+				strategy = forcedStrategy || motivation.selectStrategy(),
 				action,
 				actions = [],
-				variables = {PC: player, GIVER: subjectNPC, START: subjectNPC.location},
+				variables = {pc: player, giver: subjectNPC, start: subjectNPC.location},
 				s, sl;
 
 			//Define any variable needed for arguments and bind the action functions to those values
@@ -113,7 +100,7 @@ var QUESTIFY = (function (QUESTIFY) {
 				actions.push(action);
 			}
 
-			return QUESTIFY.createQuest(actions);
+			return QUESTIFY.createQuest(actions, variables);
 		};
 
 		return that;
