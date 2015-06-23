@@ -4,9 +4,11 @@
 
 var QUESTIFY = (function (QUESTIFY) {
 	"use strict";
-	function createQuest (actions) {
+	function createQuest (actions, variables) {
 		var that = {},
 			finished = false;
+
+		that.variables = variables;
 
 		that.updateState = function() {
 			var action,
@@ -14,21 +16,16 @@ var QUESTIFY = (function (QUESTIFY) {
 			for (var a = 0, al = actions.length; a < al; a++) {
 				action = actions[a];
 				if (!action.isFinished()) {
-					if (action.isStarted()) {
-						if (action.hasOwnProperty("subActions")) {
-
-						} else {
-							if (action.postConditionMet()) {
-								action.finish();
-								continue; //We can move to the next action immediately
-							}
-						}
-					} else if (action.preConditionMet()) {
+					if (!action.isStarted() && action.preConditionMet()) {
 						action.start();
 					}
 
-					anyUnfinished = true;
-					break;
+					if (action.isStarted() && action.postConditionMet()) {
+						action.finish();
+					} else {
+						anyUnfinished = true;
+						break;
+					}
 				}
 			}
 
