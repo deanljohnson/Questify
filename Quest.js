@@ -23,6 +23,8 @@ var QUESTIFY = (function (QUESTIFY) {
 				action = actions[a];
 				if (finishedMap[a] === false) {
 					finishedMap[a] = (action.update(argumentsArr[a]) === true);
+
+					if (finishedMap[a] === false) { return; }
 				}
 			}
 		};
