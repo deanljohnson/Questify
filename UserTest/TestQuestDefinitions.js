@@ -59,6 +59,16 @@ var char = USERTEST.createNPCBase("Player Character"),
 	};
 }());
 
+(function createConditionFunctions(){
+	questGen.generationActions.giveCharItem = function (somebody, item) {
+		if ("inventory" in somebody) {
+			somebody.inventory.push(item);
+		} else {
+			console.log("The given 'somebody' does not have an inventory!");
+		}
+	}
+}());
+
 (function createAtomicActions(){
 	questGen.atomicActions.goto = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation]);
 
@@ -104,7 +114,7 @@ var char = USERTEST.createNPCBase("Player Character"),
 	questGen.strategies.obtainLuxuries =
 		QUESTIFY.createStrategy([
 			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "NPC:storeKeeper:location"]]},
-			{atomicAction: 'obtain', actionArgs: [["DEF:pc", "OBJ:luxury"]]},
+			{atomicAction: 'obtain', actionArgs: [["DEF:pc", "OBJ:luxury"]], generationAction: ["giveCharItem", "NPC:storeKeeper", "OBJ:luxury"]},
 			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:giver:location"]]},
 			{atomicAction: 'give',   actionArgs: [["DEF:giver", "DEF:pc", "OBJ:luxury"]]}]);
 }());
@@ -280,6 +290,10 @@ function obtainLuxuriesTest() {
 	quest.updateState();
 	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon char moving to the location of the NPC with the item");
 
+	if (npc2.inventory.indexOf(item1) === -1) {
+		console.log("Store Keeper does not have the luxury item in his inventory!");
+	}
+	npc2.inventory = [];
 	char.inventory.push(item1);
 	quest.updateState();
 	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon char obtaining required item");
