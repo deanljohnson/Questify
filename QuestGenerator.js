@@ -9,7 +9,8 @@ var QUESTIFY = (function (QUESTIFY) {
 			strategies = {},
 			atomicActions = {},
 			compoundActions = {},
-			conditionFunctions = {};
+			conditionFunctions = {},
+			generationActions = {};
 
 		function selectMotivation(subjectNPC) {
 			var index = Math.floor(Math.random() * subjectNPC.motivations.length);
@@ -85,11 +86,30 @@ var QUESTIFY = (function (QUESTIFY) {
 			return actionArgsAsObjects;
 		}
 
+		function parseAndExecuteGenerationAction(genActionStringArr, variablesObj, otherNPCs, enemies, locations, objects) {
+			if (!(genActionStringArr[0] in generationActions)) {
+				console.log("The generation action '" + genActionStringArr[0] + "' does not exist!");
+				return;
+			}
+
+			var generationAction = generationActions[genActionStringArr[0]],
+				argString,
+				args = [];
+
+			for (var g = 1, gl = genActionStringArr.length; g < gl; g++) {
+				argString = genActionStringArr[g];
+				args.push(parseArgument(argString, variablesObj, otherNPCs, enemies, locations, objects));
+			}
+
+			generationAction.apply(this, args);
+		}
+
 		that.motivations = motivations;
 		that.strategies = strategies;
 		that.atomicActions = atomicActions;
 		that.compoundActions = compoundActions;
 		that.conditionFunctions = conditionFunctions;
+		that.generationActions = generationActions;
 
 		that.generateQuest = function(player, subjectNPC, otherNPCs, enemies, locations, objects, forcedStrategy) {
 			var motivation = selectMotivation(subjectNPC),
@@ -111,9 +131,19 @@ var QUESTIFY = (function (QUESTIFY) {
 					actionString = currentActionsAndArgsObj.atomicAction;
 					actions.push(this.atomicActions[actionString]);
 
+					//Check for the existence of arguments
+					if (!('actionArgs' in currentActionsAndArgsObj)) {
+						console.log("An action wasn't given any arguments to pass to it's condition functions!");
+					}
+
 					//Now add it's arguments
 					actionArgs = currentActionsAndArgsObj.actionArgs;
 					argsArr.push(parseActionArgs(actionArgs, variablesObj, otherNPCs, enemies, locations, objects));
+
+					//If a generationAction is defined for this action, parse and execute it
+					if ('generationAction' in currentActionsAndArgsObj) {
+						parseAndExecuteGenerationAction(currentActionsAndArgsObj.generationAction, variablesObj, otherNPCs, enemies, locations, objects);
+					}
 				}
 			}
 
