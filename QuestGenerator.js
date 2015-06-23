@@ -68,10 +68,11 @@ var QUESTIFY = (function (QUESTIFY) {
 
 			} else {
 				//Recreate so we don't overwrite the base actions
-				action = QUESTIFY.createAtomicAction(action.preCondition, action.postCondition).withArguments(action.preConditionArguments, action.postConditionArguments);
+				action = QUESTIFY.createAtomicAction(action.conditions).withArguments(action.conditionArguments);
 
-				action.preCondition = parseBindAndAssignArguments(action.preCondition, variables, action.preConditionArguments, otherNPCs, enemies, locations, objects);
-				action.postCondition = parseBindAndAssignArguments(action.postCondition, variables, action.postConditionArguments, otherNPCs, enemies, locations, objects);
+				for (var c = 0, cl = action.conditions.length; c < cl; c++) {
+					action.conditions[c] = parseBindAndAssignArguments(action.conditions[c], variables, action.conditionArguments[c], otherNPCs, enemies, locations, objects);
+				}
 			}
 
 			return action;
