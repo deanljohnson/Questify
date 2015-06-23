@@ -2,8 +2,8 @@
  * Created by Dean on 6/21/2015.
  */
 
-var char = USERTEST.createNPCBase(),
-	npc1 = USERTEST.createNPCBase(),
+var char = USERTEST.createNPCBase("Player Character"),
+	npc1 = USERTEST.createNPCBase("Quest Giver"),
 	npc2 = USERTEST.createNPCBase(),
 	npc3 = USERTEST.createNPCBase(),
 	enemy1 = USERTEST.createNPCBase(),
@@ -12,6 +12,9 @@ var char = USERTEST.createNPCBase(),
 	loc1 = USERTEST.createLocationBase("1:1"),
 	loc2 = USERTEST.createLocationBase("2:2"),
 	loc3 = USERTEST.createLocationBase("3:3"),
+	item1 = USERTEST.createItemBase("1:1", "Item 1"),
+	item2 = USERTEST.createItemBase("2:2", "Item 2"),
+	item3 = USERTEST.createItemBase("3:3", "Item 3"),
 	questGen = QUESTIFY.createQuestGenerator();
 
 (function createConditionFunctions(){
@@ -43,7 +46,7 @@ var char = USERTEST.createNPCBase(),
 		return false;
 	};
 	questGen.conditionFunctions.checkIfCharHasItemAndOtherDoesNot = function(somebody, other, item) {
-		return somebody.inventory.indexOf(item) !== -1 && somebody.inventory.indexOf(item) === -1;
+		return somebody.inventory.indexOf(item) !== -1 && other.inventory.indexOf(item) === -1;
 	};
 	questGen.conditionFunctions.checkIfCharIsAtLocationAndHasItem = function(somebody, location, item) {
 		return somebody.location === location && somebody.inventory.indexOf(item) !== -1;
@@ -67,7 +70,7 @@ var char = USERTEST.createNPCBase(),
 
 	questGen.atomicActions.capture = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasPrisoner]);
 
-	questGen.atomicActions.give = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasItem]);
+	questGen.atomicActions.give = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasItemAndOtherDoesNot]);
 
 	questGen.atomicActions.take = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasItemAndOtherDoesNot]);
 
@@ -75,6 +78,8 @@ var char = USERTEST.createNPCBase(),
 							                                    questGen.conditionFunctions.checkIfCharHasItem]);
 
 	questGen.atomicActions.learn = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharKnowsInformation]);
+
+	questGen.atomicActions.obtain = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasItem]);
 }());
 
 (function createStrategies(){
@@ -89,17 +94,25 @@ var char = USERTEST.createNPCBase(),
 		QUESTIFY.createStrategy([
 			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "LOC:poi"]]},
 			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:giver:location"]]},
-			{atomicAction: 'report',   actionArgs: [["DEF:pc", "DEF:giver:location"], ["DEF:giver", "LOC:poi"]]}]);
+			{atomicAction: 'report', actionArgs: [["DEF:pc", "DEF:giver:location"], ["DEF:giver", "LOC:poi"]]}]);
 
 	questGen.strategies.goAndLearn =
 		QUESTIFY.createStrategy([
 			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "NPC:otherNPC:location"]]},
-			{atomicAction: 'learn', actionArgs: [["DEF:pc", "LOC:locInfo"]]}]);
+			{atomicAction: 'learn',  actionArgs: [["DEF:pc", "LOC:locInfo"]]}]);
+
+	questGen.strategies.obtainLuxuries =
+		QUESTIFY.createStrategy([
+			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "NPC:storeKeeper:location"]]},
+			{atomicAction: 'obtain', actionArgs: [["DEF:pc", "OBJ:luxury"]]},
+			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:giver:location"]]},
+			{atomicAction: 'give',   actionArgs: [["DEF:giver", "DEF:pc", "OBJ:luxury"]]}]);
 }());
 
 (function createMotivations(){
 	questGen.motivations.reputation = QUESTIFY.createMotivation([questGen.strategies.killEnemy]);
 	questGen.motivations.knowledge = QUESTIFY.createMotivation([questGen.strategies.explore, questGen.strategies.goAndLearn]);
+	questGen.motivations.comfort = QUESTIFY.createMotivation([questGen.strategies.obtainLuxuries]);
 }());
 
 function noSharedStateTest() {
@@ -247,3 +260,40 @@ function goAndLearnTest() {
 	console.log(quest.isFinished());
 }
 goAndLearnTest();
+
+function obtainLuxuriesTest() {
+	char = USERTEST.createNPCBase("Player Character");
+	npc1 = USERTEST.createNPCBase("Quest Giver");
+	npc2 = USERTEST.createNPCBase("NPC To Obtain From");
+	item1 = USERTEST.createItemBase("1:1", "Luxury Item");
+
+	char.location = loc1;
+	npc1.location = loc1;
+	npc2.location = loc2;
+
+	var quest = questGen.generateQuest(char, npc1, [npc2], [], [], [item1], questGen.strategies.obtainLuxuries);
+
+	quest.updateState();
+	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon generation");
+
+	char.location = npc2.location;
+	quest.updateState();
+	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon char moving to the location of the NPC with the item");
+
+	char.inventory.push(item1);
+	quest.updateState();
+	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon char obtaining required item");
+
+	char.location = npc1.location;
+	quest.updateState();
+	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon char moving to the location of the quest giver");
+
+	char.inventory = [];
+	npc1.inventory.push(item1);
+	quest.updateState();
+	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon char giving item to quest giver");
+
+	console.log("ObtainLuxuries Quest: Overall Test Results: ");
+	console.log(quest.isFinished());
+}
+obtainLuxuriesTest();
