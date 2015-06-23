@@ -4,10 +4,11 @@
 
 var USERTEST = (function (USERTEST) {
 	"use strict";
-	function createNPCBase() {
+	function createNPCBase(name) {
 		var that = {},
 			motivations = [];
 
+		that.name = name || "";
 		that.isAlive = true;
 		that.knownInformation = [];
 		that.motivations = motivations;

@@ -4,10 +4,11 @@
 
 var USERTEST = (function (USERTEST) {
 	"use strict";
-	function createLocationBase(pos) {
+	function createLocationBase(pos, name) {
 		var that = {};
 
 		that.position = pos;
+		that.name = name || "";
 
 		return that;
 	}
