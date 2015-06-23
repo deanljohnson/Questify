@@ -79,21 +79,26 @@ var char = USERTEST.createNPCBase(),
 
 (function createStrategies(){
 	questGen.strategies.killEnemy =
-		QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments([["DEF:pc", "ENEMY:enemy:location"]]),
-								 questGen.atomicActions.kill.withArguments([["DEF:pc", "ENEMY:enemy:location"], ["ENEMY:enemy"]]),
-								 questGen.atomicActions.goto.withArguments([["DEF:pc", "DEF:start"]]),
-								 questGen.atomicActions.report.withArguments([["DEF:giver", "DEF:pc:location"], ["DEF:giver", "ENEMY:enemy"]])]);
+		QUESTIFY.createStrategy([
+			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "ENEMY:enemy:location"]]},
+			{atomicAction: 'kill',   actionArgs: [["DEF:pc", "ENEMY:enemy:location"], ["ENEMY:enemy"]]},
+			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:start"]]},
+			{atomicAction: 'report', actionArgs: [["DEF:giver", "DEF:pc:location"], ["DEF:giver", "ENEMY:enemy"]]}]);
+
 	questGen.strategies.explore =
-		QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments([["DEF:pc", "LOC:poi"], ["DEF:pc", "LOC:poi"]]),
-								 questGen.atomicActions.goto.withArguments([["DEF:pc", "DEF:start"], ["DEF:pc", "DEF:start"]])]);
+		QUESTIFY.createStrategy([
+			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "LOC:poi"], ["DEF:pc", "LOC:poi"]]},
+			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:start"], ["DEF:pc", "DEF:start"]]}]);
+
 	questGen.strategies.goAndLearn =
-		QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments([["DEF:pc", "NPC:otherNPC:location"], ["DEF:pc:location", "NPC:otherNPC:location"]]),
-								 questGen.atomicActions.listen.withArguments([["DEF:pc", "LOC:locInfo"]])]);
+		QUESTIFY.createStrategy([
+			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "NPC:otherNPC:location"], ["DEF:pc:location", "NPC:otherNPC:location"]]},
+			{atomicAction: 'listen', actionArgs: [["DEF:pc", "LOC:locInfo"]]}]);
 }());
 
 (function createMotivations(){
 	questGen.motivations.reputation = QUESTIFY.createMotivation([questGen.strategies.killEnemy]);
-	questGen.motivations.knowledge = QUESTIFY.createMotivation([questGen.strategies.explore]);
+	questGen.motivations.knowledge = QUESTIFY.createMotivation([questGen.strategies.explore, questGen.strategies.goAndLearn]);
 }());
 
 function noSharedStateTest() {
