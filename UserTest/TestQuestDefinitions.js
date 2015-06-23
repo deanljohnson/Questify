@@ -51,6 +51,9 @@ var char = USERTEST.createNPCBase(),
 	questGen.conditionFunctions.checkIfItemIsAtLocation = function(item, location) {
 		return item.location === location;
 	};
+	questGen.conditionFunctions.checkIfCharIsAtLocationAndKnowsInformation = function(somebody, location, info) {
+		return questGen.conditionFunctions.checkIfCharIsAtLocation(somebody, location) && questGen.conditionFunctions.checkIfCharIsAtLocationAndKnowsInformation(somebody, info);
+	};
 }());
 
 (function createAtomicActions(){
@@ -68,16 +71,19 @@ var char = USERTEST.createNPCBase(),
 															  questGen.conditionFunctions.checkIfCharHasItemAndOtherDoesNot);
 	questGen.atomicActions.gather = QUESTIFY.createAtomicAction(questGen.conditionFunctions.checkIfItemIsAtLocation,
 							                                    questGen.conditionFunctions.checkIfCharHasItem);
-
+	questGen.atomicActions.listen = QUESTIFY.createAtomicAction(questGen.conditionFunctions.checkIfCharIsAtLocationAndKnowsInformation,
+																questGen.conditionFunctions.checkIfCharKnowsInformation);
 }());
 
 (function createStrategies(){
-	questGen.strategies.killEnemy = QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments(["PC", "LOC:ENEMYLOCATION"], ["PC", "LOC:ENEMYLOCATION"]),
-															 questGen.atomicActions.kill.withArguments(["ENEMY:ENEMY1", "LOC:ENEMYLOCATION"], ["ENEMY:ENEMY1"]),
-															 questGen.atomicActions.goto.withArguments(["PC", "START"], ["PC", "START"]),
-														     questGen.atomicActions.report.withArguments(["GIVER", "START"], ["GIVER", "ENEMY:ENEMY1"])]);
-	questGen.strategies.explore = QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments(["PC", "LOC:POI"], ["PC", "LOC:POI"]),
-														   questGen.atomicActions.goto.withArguments(["PC", "START"], ["PC", "START"])]);
+	questGen.strategies.killEnemy = QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments(["DEF:pc", "ENEMY:enemy:location"], ["DEF:pc", "ENEMY:enemy:location"]),
+															 questGen.atomicActions.kill.withArguments(["DEF:pc", "ENEMY:enemy:location"], ["ENEMY:enemy"]),
+															 questGen.atomicActions.goto.withArguments(["DEF:pc", "DEF:start"], ["DEF:pc", "DEF:start"]),
+														     questGen.atomicActions.report.withArguments(["DEF:giver", "DEF:start"], ["DEF:giver", "ENEMY:enemy"])]);
+	questGen.strategies.explore = QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments(["DEF:pc", "LOC:poi"], ["DEF:pc", "LOC:poi"]),
+														   questGen.atomicActions.goto.withArguments(["DEF:pc", "DEF:start"], ["DEF:pc", "DEF:start"])]);
+	questGen.strategies.goAndLearn = QUESTIFY.createStrategy([questGen.atomicActions.goto.withArguments(["DEF:pc", "NPC:otherNPC:location"], ["DEF:pc:location", "NPC:otherNPC:location"]),
+															  questGen.atomicActions.listen.withArguments(["NPC:otherNPC", "DEF:pc:location", "LOC:locInfo"], ["DEF:pc", "LOC:locInfo"])]);
 }());
 
 (function createMotivations(){
@@ -86,12 +92,13 @@ var char = USERTEST.createNPCBase(),
 }());
 
 function noSharedStateTest() {
-	npc1 = USERTEST.createNPCBase();
-	char = USERTEST.createNPCBase();
-	enemy1 = USERTEST.createNPCBase();
-	enemy2 = USERTEST.createNPCBase();
-	loc1 = USERTEST.createLocationBase();
-	loc2 = USERTEST.createLocationBase();
+	/*In this test, we create two very similar quests and make sure that the progress in one is not reflected in the other*/
+	npc1 = USERTEST.createNPCBase("Quest Giver");
+	char = USERTEST.createNPCBase("Player Character");
+	enemy1 = USERTEST.createNPCBase("Enemy #1");
+	enemy2 = USERTEST.createNPCBase("Enemy #2");
+	loc1 = USERTEST.createLocationBase("1:1", "Quest Start Location");
+	loc2 = USERTEST.createLocationBase("2:2", "Enemy Location");
 
 	npc1.motivations.push(questGen.motivations.reputation);
 
@@ -134,10 +141,47 @@ function noSharedStateTest() {
 	console.log("Quest1: " + quest.isFinished() + " upon reporting back");
 	console.log("Quest2: " + quest2.isFinished());
 
-	console.log("Quest1: " + quest.isFinished() + " " + enemy1.isAlive);
-	console.log("Quest2: " + quest2.isFinished() + " " + enemy2.isAlive);
-
-	console.log("Overall Test Result: ");
+	console.log("No Shared State Test: Overall Test Result: ");
 	console.log(quest.isFinished() && !quest2.isFinished() && !enemy1.isAlive && enemy2.isAlive);
 }
 noSharedStateTest();
+
+function killEnemyTest() {
+	char = USERTEST.createNPCBase("Player Character");
+	npc1 = USERTEST.createNPCBase("Quest Giver");
+	enemy1 = USERTEST.createNPCBase("Enemy To Kill");
+	loc1 = USERTEST.createLocationBase("1:1", "Quest Start Location");
+	loc2 = USERTEST.createLocationBase("2:2", "Enemy Location");
+
+	npc1.motivations.push(questGen.motivations.reputation);
+
+	char.location = loc1;
+	npc1.location = loc1;
+	char.knownInformation.push(loc1);
+	npc1.knownInformation.push(loc1);
+	enemy1.location = loc2;
+	char.knownInformation.push(loc2);
+
+	var quest = questGen.generateQuest(char, npc1, [], [enemy1], [loc2], [], questGen.strategies.killEnemy);
+
+	quest.updateState();
+	console.log("KillEnemy Quest: " + quest.isFinished() + " upon generation");
+
+	char.location = enemy1.location;
+	enemy1.isAlive = false;
+	char.knownInformation.push(enemy1);
+	quest.updateState();
+	console.log("KillEnemy Quest: " + quest.isFinished() + " upon char moving to enemy and killing him");
+
+	char.location = npc1.location;
+	quest.updateState();
+	console.log("KillEnemy Quest: " + quest.isFinished() + " upon returning to start");
+
+	npc1.knownInformation.push(enemy1);
+	quest.updateState();
+	console.log("KillEnemy Quest: " + quest.isFinished() + " upon reporting back to quest giver");
+
+	console.log("KillEnemy Quest: Overall Test Results: ");
+	console.log(quest.isFinished());
+}
+killEnemyTest();
