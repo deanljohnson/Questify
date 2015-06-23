@@ -74,7 +74,7 @@ var char = USERTEST.createNPCBase(),
 	questGen.atomicActions.gather = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,
 							                                    questGen.conditionFunctions.checkIfCharHasItem]);
 
-	questGen.atomicActions.listen = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharKnowsInformation]);
+	questGen.atomicActions.learn = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharKnowsInformation]);
 }());
 
 (function createStrategies(){
@@ -87,13 +87,14 @@ var char = USERTEST.createNPCBase(),
 
 	questGen.strategies.explore =
 		QUESTIFY.createStrategy([
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "LOC:poi"], ["DEF:pc", "LOC:poi"]]},
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:start"], ["DEF:pc", "DEF:start"]]}]);
+			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "LOC:poi"]]},
+			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:giver:location"]]},
+			{atomicAction: 'report',   actionArgs: [["DEF:pc", "DEF:giver:location"], ["DEF:giver", "LOC:poi"]]}]);
 
 	questGen.strategies.goAndLearn =
 		QUESTIFY.createStrategy([
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "NPC:otherNPC:location"], ["DEF:pc:location", "NPC:otherNPC:location"]]},
-			{atomicAction: 'listen', actionArgs: [["DEF:pc", "LOC:locInfo"]]}]);
+			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "NPC:otherNPC:location"]]},
+			{atomicAction: 'learn', actionArgs: [["DEF:pc", "LOC:locInfo"]]}]);
 }());
 
 (function createMotivations(){
@@ -167,10 +168,7 @@ function killEnemyTest() {
 
 	char.location = loc1;
 	npc1.location = loc1;
-	char.knownInformation.push(loc1);
-	npc1.knownInformation.push(loc1);
 	enemy1.location = loc2;
-	char.knownInformation.push(loc2);
 
 	var quest = questGen.generateQuest(char, npc1, [], [enemy1], [loc2], [], questGen.strategies.killEnemy);
 
@@ -179,7 +177,6 @@ function killEnemyTest() {
 
 	char.location = enemy1.location;
 	enemy1.isAlive = false;
-	char.knownInformation.push(enemy1);
 	quest.updateState();
 	console.log("KillEnemy Quest: " + quest.isFinished() + " upon char moving to enemy and killing him");
 
@@ -195,3 +192,58 @@ function killEnemyTest() {
 	console.log(quest.isFinished());
 }
 killEnemyTest();
+
+function exploreTest() {
+	char = USERTEST.createNPCBase("Player Character");
+	npc1 = USERTEST.createNPCBase("Quest Giver");
+	loc1 = USERTEST.createLocationBase("1:1", "Quest Start Location");
+
+	char.location = loc1;
+	npc1.location = loc1;
+
+	var quest = questGen.generateQuest(char, npc1, [], [enemy1], [loc2], [], questGen.strategies.explore);
+
+	quest.updateState();
+	console.log("Explore Quest: " + quest.isFinished() + " upon generation");
+
+	char.location = loc2;
+	quest.updateState();
+	console.log("Explore Quest: " + quest.isFinished() + " upon char moving to point of interest");
+
+	char.location = npc1.location;
+	quest.updateState();
+	console.log("Explore Quest: " + quest.isFinished() + " upon returning to quest givers location");
+
+	npc1.knownInformation.push(loc2);
+	quest.updateState();
+	console.log("Explore Quest: " + quest.isFinished() + " upon reporting back to quest giver");
+
+	console.log("Explore Quest: Overall Test Results: ");
+	console.log(quest.isFinished());
+}
+exploreTest();
+
+function goAndLearnTest() {
+	char = USERTEST.createNPCBase("Player Character");
+	npc1 = USERTEST.createNPCBase("Quest Giver");
+	npc2 = USERTEST.createNPCBase("NPC To Learn From");
+	loc1 = USERTEST.createLocationBase("1:1", "Quest Start Location");
+	loc1 = USERTEST.createLocationBase("2:2", "Info to Learn");
+
+	var quest = questGen.generateQuest(char, npc1, [npc2], [], [loc2], [], questGen.strategies.goAndLearn);
+
+	quest.updateState();
+	console.log("GoAndLearn Quest: " + quest.isFinished() + " upon generation");
+
+	char.location = npc2.location;
+	quest.updateState();
+	console.log("GoAndLearn Quest: " + quest.isFinished() + " upon char moving to the location of the other NPC");
+
+	char.knownInformation.push(loc2);
+	quest.updateState();
+	console.log("GoAndLearn Quest: " + quest.isFinished() + " upon char learning required information");
+
+	console.log("GoAndLearn Quest: Overall Test Results: ");
+	console.log(quest.isFinished());
+}
+goAndLearnTest();
