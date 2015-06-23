@@ -59,8 +59,8 @@ var char = USERTEST.createNPCBase("Player Character"),
 	};
 }());
 
-(function createConditionFunctions(){
-	questGen.generationActions.giveCharItem = function (somebody, item) {
+(function createParseActions(){
+	questGen.onParseActions.giveCharItem = function (somebody, item) {
 		if ("inventory" in somebody) {
 			somebody.inventory.push(item);
 		} else {
@@ -114,7 +114,7 @@ var char = USERTEST.createNPCBase("Player Character"),
 	questGen.strategies.obtainLuxuries =
 		QUESTIFY.createStrategy([
 			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "NPC:storeKeeper:location"]]},
-			{atomicAction: 'obtain', actionArgs: [["DEF:pc", "OBJ:luxury"]], generationAction: ["giveCharItem", "NPC:storeKeeper", "OBJ:luxury"]},
+			{atomicAction: 'obtain', actionArgs: [["DEF:pc", "OBJ:luxury"]], onParseAction: ["giveCharItem", "NPC:storeKeeper", "OBJ:luxury"]},
 			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:giver:location"]]},
 			{atomicAction: 'give',   actionArgs: [["DEF:giver", "DEF:pc", "OBJ:luxury"]]}]);
 }());

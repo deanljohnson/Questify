@@ -10,7 +10,7 @@ var QUESTIFY = (function (QUESTIFY) {
 			atomicActions = {},
 			compoundActions = {},
 			conditionFunctions = {},
-			generationActions = {};
+			onParseActions = {};
 
 		function selectMotivation(subjectNPC) {
 			var index = Math.floor(Math.random() * subjectNPC.motivations.length);
@@ -86,22 +86,22 @@ var QUESTIFY = (function (QUESTIFY) {
 			return actionArgsAsObjects;
 		}
 
-		function parseAndExecuteGenerationAction(genActionStringArr, variablesObj, otherNPCs, enemies, locations, objects) {
-			if (!(genActionStringArr[0] in generationActions)) {
-				console.log("The generation action '" + genActionStringArr[0] + "' does not exist!");
+		function parseAndExecuteParseAction(parseActionStringArr, variablesObj, otherNPCs, enemies, locations, objects) {
+			if (!(parseActionStringArr[0] in onParseActions)) {
+				console.log("The generation action '" + parseActionStringArr[0] + "' does not exist!");
 				return;
 			}
 
-			var generationAction = generationActions[genActionStringArr[0]],
+			var parseAction = onParseActions[parseActionStringArr[0]],
 				argString,
 				args = [];
 
-			for (var g = 1, gl = genActionStringArr.length; g < gl; g++) {
-				argString = genActionStringArr[g];
+			for (var g = 1, gl = parseActionStringArr.length; g < gl; g++) {
+				argString = parseActionStringArr[g];
 				args.push(parseArgument(argString, variablesObj, otherNPCs, enemies, locations, objects));
 			}
 
-			generationAction.apply(this, args);
+			parseAction.apply(this, args);
 		}
 
 		that.motivations = motivations;
@@ -109,7 +109,7 @@ var QUESTIFY = (function (QUESTIFY) {
 		that.atomicActions = atomicActions;
 		that.compoundActions = compoundActions;
 		that.conditionFunctions = conditionFunctions;
-		that.generationActions = generationActions;
+		that.onParseActions = onParseActions;
 
 		that.generateQuest = function(player, subjectNPC, otherNPCs, enemies, locations, objects, forcedStrategy) {
 			var motivation = selectMotivation(subjectNPC),
@@ -141,8 +141,8 @@ var QUESTIFY = (function (QUESTIFY) {
 					argsArr.push(parseActionArgs(actionArgs, variablesObj, otherNPCs, enemies, locations, objects));
 
 					//If a generationAction is defined for this action, parse and execute it
-					if ('generationAction' in currentActionsAndArgsObj) {
-						parseAndExecuteGenerationAction(currentActionsAndArgsObj.generationAction, variablesObj, otherNPCs, enemies, locations, objects);
+					if ('onParseAction' in currentActionsAndArgsObj) {
+						parseAndExecuteParseAction(currentActionsAndArgsObj.onParseAction, variablesObj, otherNPCs, enemies, locations, objects);
 					}
 				}
 			}
