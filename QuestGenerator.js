@@ -19,20 +19,36 @@ var QUESTIFY = (function (QUESTIFY) {
 
 		function parseArgument(arg, selectedObj, entities) {
 			var pieces = arg.split(':'),
-				type = pieces[0],
+				arrString = pieces[0],
 				id = pieces[1],
 				propString,
 				typeArr = [],
 				argObject;
 
+			//Remove brackets on the initial array
+			if (arrString.charAt(0) === '[') {
+				arrString = arrString.slice(1, -1);
+			} else {
+				throw new Error(arrString +
+				" is not a valid array identifier and is the first portion of an action argument");
+			}
+
+			//Remove single quotes on the initial id
+			if (id.charAt(0) === "'") {
+				id = id.slice(1, -1);
+			} else {
+				throw new Error(id +
+				" is not a valid id identifier and follows an array.");
+			}
+
 			//Check if an entity with this id hasn't been selected before.
 			//If one hasn't been, select it.
 			if (!(selectedObj.hasOwnProperty(id))) {
-				if (!(type in entities)) {
-					throw new Error("The specified type: " + type + " was not defined in the entities object passed to generateQuest()");
+				if (!(arrString in entities)) {
+					throw new Error("The specified type: " + arrString + " was not defined in the entities object passed to generateQuest()");
 				}
 
-				typeArr = entities[type];
+				typeArr = entities[arrString];
 				selectedObj[id] = typeArr[Math.floor(Math.random() * typeArr.length)];
 			}
 
@@ -43,7 +59,38 @@ var QUESTIFY = (function (QUESTIFY) {
 			for (var p = 2, pl = pieces.length; p < pl; p++) {
 				propString = pieces[p];
 
-				if (argObject.hasOwnProperty(propString)) {
+				//We have an array and need to select an object
+				if (propString.charAt(0) === "[") {
+
+					//Remove brackets
+					arrString = propString.slice(1, -1);
+					typeArr = argObject[arrString];
+
+					//increment p so we can get the id value
+					p += 1;
+					id = pieces[p];
+					//Remove single quotes on the id
+					if (id.charAt(0) === "'") {
+						id = id.slice(1, -1);
+					} else {
+						throw new Error(id +
+						" is not a valid id identifier and follows an array.");
+					}
+
+					//If the id has been selected before, use that object, otherwise
+					//Select an object and tag it with id
+					if (selectedObj.hasOwnProperty(id)) {
+						argObject = selectedObj[id];
+					} else {
+						//Get a random value in the array. Add to selected values to track it
+						argObject = typeArr[Math.floor(Math.random() * typeArr.length)];
+						selectedObj[id] = argObject;
+					}
+				} else if (propString.charAt(0) === "'") {
+					throw new Error(propString + " is formatted like an id identifier, but does not follow an array.");
+				}
+				//We have a property access
+				else {
 					argObject = argObject[propString];
 				}
 			}
