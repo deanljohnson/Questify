@@ -1,9 +1,9 @@
 # Questify
-A procedural quest generator written in JavaScript that is still in development. Questify does not simply generate quest structures that you must manually fill with details. Instead, Questify gives you the necessary configuration options to have quests generated that match your needs with quest details procedurally selected using your given list of entities. This design will hoepfully allow Questify to run live in a game environment, generating quests on the fly as they are needed. All you will have to do is define the skeleton structure of a quests you will want in your game, and then pass it lists of entities to draw details from.
+A procedural quest generator written in JavaScript that is still in development. Questify does not simply generate quest structures that you must manually fill with details. Instead, Questify gives you the necessary configuration options to have quests generated that match your needs with quest details procedurally selected using your given list of entities. This design will hopefully allow Questify to run live in a game environment, generating quests on the fly as they are needed. All you will have to do is define the skeleton structure of a quests you will want in your game, and then pass it lists of entities to draw details from.
 
 The process of defining quests is largely based off of [this paper](https://larc.unt.edu/techreports/LARC-2011-02.pdf). 
 
-Essentially, you create motivations that you can then attach to NPC's. For example, an NPC could be motivated by greed, knowledge, or reputation. Each motivation has an array of quest structures associated with it called strategies. Think of a strategy as the skeleton of your quest: it defines the format, but not the content itself. Every strategy is made up of multiple actions. Each action is made up of various conditions that must be met for the action to be finished.
+Essentially, you create motivations that you can then attach to NPC's. For example, an NPC could be motivated by greed, knowledge, and/or reputation. Each motivation has an array of quest structures associated with it called strategies. Think of a strategy as the skeleton of your quest: it defines the format, but not the content itself. Every strategy is made up of multiple actions. Each action is made up of various conditions that must be met for the action to be finished.
 
 For example, lets define a quest to kill an enemy. This quest will require four actions:
 
@@ -33,8 +33,7 @@ Kill Definition:
 		return !somebody.isAlive;
 	};
 	
-	questGen.atomicActions.kill = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,
-															                                questGen.conditionFunctions.checkIfCharIsDead]);
+questGen.atomicActions.kill = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,				                                			   					   questGen.conditionFunctions.checkIfCharIsDead]);
 ````
 
 Report Definition
@@ -47,27 +46,37 @@ Report Definition
 	};
 	
 	questGen.atomicActions.kill = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,
-                                                    questGen.conditionFunctions.checkIfCharKnowsInformation]);
+                                                    		   questGen.conditionFunctions.checkIfCharKnowsInformation]);
 ````
 
 With our actions defined, let's define our strategy. In this step, we will be formatting the arguments to each of the actions as well:
 
 ````javascript
   questGen.strategies.killEnemy =
-		QUESTIFY.createStrategy([
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "ENEMY:enemy:location"]]},
-			{atomicAction: 'kill',   actionArgs: [["DEF:pc", "ENEMY:enemy:location"], ["ENEMY:enemy"]]},
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:start"]]},
-			{atomicAction: 'report', actionArgs: [["DEF:giver", "DEF:pc:location"], ["DEF:giver", "ENEMY:enemy"]]}]);
+		QUESTIFY.createStrategy(["[ENEMY]:'enemy'"],
+			[{atomicAction: 'goto',   actionArgs: [["pc", "enemy:location"]]},
+			 {atomicAction: 'kill',   actionArgs: [["pc", "enemy:location"], ["enemy"]]},
+			 {atomicAction: 'report', actionArgs: [["pc", "giver:location"], ["giver", "enemy"]]}]);
 ````
 
-Questify will select an object for each unique tag in the actionArgs arrays. By using the same tags as needed, you can define the structure of the quest without actually worrying about EXACTLY which entity they are going to. Questify will handle the tagging of entities for you. Now, upon creating the quest, you can pass in your collection of objects and Questify will select an appropriate object for each unique tag and then make sure that each condition of each action is checked against the properly tagged item! We will pass in the entities in a moment. Let's first define a motivation:
+First, we start off by defining tags that we will need in setting the arguments to the startegies actions. "[ENEMY]:'enemy'" tells Questify to randomly select an object from the ENTITY array that you will pass to the generateQuest method and assign it the the tag of "enemy". Now, when defining the actions for this strategy, we can reference that tag, such as when we enter "enemy:location", which tells questify to find the enemy tag and access it's location property. 
+
+Questify also defines three tags on it's own:
+1. pc === the player, standing for player character
+2. giver === the npc that it giving the player the quest
+3. start === the location at which the quest started
+
+Questify will automatically pass the appropriate object to the condition functions we defined for our actions, based on the tags we used when defining the strategy.
+
+Now we can define a motivation:
 
 ````javascript
   questGen.motivations.reputation = QUESTIFY.createMotivation([questGen.strategies.killEnemy]);
 ````
 
-Motivations are basically just an array of strategies that an npc could use to fulfill that motivation, if they are motivated by that. So let's make an NPC. Note that the way you do this it up to you. All the npc NEEDS is a motivations property that is an array:
+Motivations are basically just an array of strategies that an npc could use to fulfill that motivation. Upon quest generation, you will provide Questify with a NPC with a motivations property. Questify will then randomly select a strategy from a randomly selected motivation and build a quest based off of that.
+
+So let's make an NPC. Note that the way you do this it up to you. All the npc NEEDS is a motivations property that is an array:
 
 ````javascript
   var npc1 = USERTEST.createNPCBase("Quest Giver");
@@ -77,11 +86,12 @@ Motivations are basically just an array of strategies that an npc could use to f
 And now, finally, the quest:
 
 ````javascript
-  //the last four arguments must be arrays. Right now, it is hard coded for them to be in this order and to represent those types of entities, but that will be changing
-  //char is the player to assign as the "pc" of the quest
-  var quest = questGen.generateQuest(char, npc1, otherNPCs, enemies, locations, objects);
+ //npcsArr, enemyArr, and locationsArr are arrays of your games objects that you define
+  var quest = questGen.generateQuest(char, npc1, {NPCS: npcsArr, ENEMY: enemyArr, LOC: locationsArr});
 ````
 
-Now what this will do is generate a quest with "char" as the "DEF:pc", npc1 as the "DEF:giver", and then select appropriate entities from the given arrays of objects to fill out the quest details. The generateQuest method selects a random motivation from the given npc, then a random strategy of that motivation to structure the quest off of.
+Now what this will do is generate a quest with the "pc" tag set to reference the "char" object, and the "giver" tag set to referene the "npc1" object. The quest will be populated with details based on the object you pass in as the third parameter. In our example, we really only need the "ENEMY: enemyArr" portion, but in a system with more strategies we would have to pass arrays that could give Questify data for any possible startegy that gets selected, so it's a good practice to simply pass them all.
 
-While this might seem like a lot to define one quest, you now have conditions, actions, and quest structures that you can reuse endlessly. You can create new quests simply and easily and let Questify handle the details.
+While this might seem like a lot to define one quest, we have created conditions and actions that could be reused in other strategies. For example, just using the goto, kill, and report actions, we could define strategies for simple exploring quests or even a single bounty list quest that requires a player to kill multiple enemies, and the checkIfCharIsAtLocation and checkIfCharKnowsInformation conditions could be reused in defining a multitube of actions.
+
+Defining quests in this manner allows us to re-use virtually every single component, shortening the time it takes for us to develop a game with varied and detailed quests. I hope Questify is helpful in your creations. Continue checking back for updates or contribute wherever you can. Any help is greatly appreciated.
