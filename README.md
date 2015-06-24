@@ -1,5 +1,5 @@
 # Questify
-A procedural quest generator written in JavaScript that is still in development. Questify does not simply generate quest structures that you must manually fill with details. Instead, Questify gives you the necessary configuration options to have quests generated that match your needs with quest details procedurally selected using your given list of entities. This allows Questify to run live in a game environment, generated quests as needed.
+A procedural quest generator written in JavaScript that is still in development. Questify does not simply generate quest structures that you must manually fill with details. Instead, Questify gives you the necessary configuration options to have quests generated that match your needs with quest details procedurally selected using your given list of entities. This design will hoepfully allow Questify to run live in a game environment, generating quests on the fly as they are needed. All you will have to do is define the skeleton structure of a quests you will want in your game, and then pass it lists of entities to draw details from.
 
 The process of defining quests is largely based off of [this paper](https://larc.unt.edu/techreports/LARC-2011-02.pdf). 
 
