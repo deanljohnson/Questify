@@ -4,10 +4,11 @@
 
 var QUESTIFY = (function (QUESTIFY) {
 	"use strict";
-	function createStrategy (actionsAndArgsObjsArr) {
+	function createStrategy (variableDefinitions, actionsAndArgsObject) {
 		var that = {};
 
-		that.actionsAndArgs = actionsAndArgsObjsArr;
+		that.variableDefinitions = variableDefinitions;
+		that.actionsAndArgs = actionsAndArgsObject;
 
 		return that;
 	}
