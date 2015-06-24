@@ -94,28 +94,28 @@ var char = USERTEST.createNPCBase("Player Character"),
 
 (function createStrategies(){
 	questGen.strategies.killEnemy =
-		QUESTIFY.createStrategy([
-			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[ENEMY]:'enemy':location"]]},
-			{atomicAction: 'kill',   actionArgs: [["[DEF]:'pc'", "[ENEMY]:'enemy':location"], ["[ENEMY]:'enemy'"]]},
-			{atomicAction: 'report', actionArgs: [["[DEF]:'pc'", "[DEF]:'giver':location"], ["[DEF]:'giver'", "[ENEMY]:'enemy'"]]}]);
+		QUESTIFY.createStrategy(["[ENEMY]:'enemy'"],
+			[{atomicAction: 'goto',   actionArgs: [["pc", "enemy:location"]]},
+			 {atomicAction: 'kill',   actionArgs: [["pc", "enemy:location"], ["enemy"]]},
+			 {atomicAction: 'report', actionArgs: [["pc", "giver:location"], ["giver", "enemy"]]}]);
 
 	questGen.strategies.explore =
-		QUESTIFY.createStrategy([
-			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[LOC]:'poi'"]]},
-			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[DEF]:'giver':location"]]},
-			{atomicAction: 'report', actionArgs: [["[DEF]:'pc'", "[DEF]:'giver':location"], ["[DEF]:'giver'", "[LOC]:'poi'"]]}]);
+		QUESTIFY.createStrategy(["[LOC]:'poi'"],
+			[{atomicAction: 'goto',   actionArgs: [["pc", "poi"]]},
+			 {atomicAction: 'goto',   actionArgs: [["pc", "giver:location"]]},
+			 {atomicAction: 'report', actionArgs: [["pc", "giver:location"], ["giver", "poi"]]}]);
 
 	questGen.strategies.goAndLearn =
-		QUESTIFY.createStrategy([
-			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[NPC]:'otherNPC':location"]]},
-			{atomicAction: 'learn',  actionArgs: [["[DEF]:'pc'", "[LOC]:'locInfo'"]]}]);
+		QUESTIFY.createStrategy(["[NPC]:'otherNPC'", "[LOC]:'locInfo'"],
+			[{atomicAction: 'goto',   actionArgs: [["pc", "otherNPC:location"]]},
+			 {atomicAction: 'learn',  actionArgs: [["pc", "locInfo"]]}]);
 
 	questGen.strategies.obtainLuxuries =
-		QUESTIFY.createStrategy([
-			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[NPC]:'storeKeeper':location"]]},
-			{atomicAction: 'obtain', actionArgs: [["[DEF]:'pc'", "[NPC]:'storeKeeper':[inventory]:'luxury'"]]},
-			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[DEF]:'giver':location"]]},
-			{atomicAction: 'give',   actionArgs: [["[DEF]:'giver'", "[DEF]:'pc'", "[NPC]:'storeKeeper':[inventory]:'luxury'"]]}]);
+		QUESTIFY.createStrategy(["[NPC]:'storeKeeper':[inventory]:'luxury'"],
+			[{atomicAction: 'goto',   actionArgs: [["pc", "storeKeeper:location"]]},
+			 {atomicAction: 'obtain', actionArgs: [["pc", "luxury"]]},
+			 {atomicAction: 'goto',   actionArgs: [["pc", "giver:location"]]},
+			 {atomicAction: 'give',   actionArgs: [["giver", "pc", "luxury"]]}]);
 }());
 
 (function createMotivations(){
