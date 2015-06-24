@@ -61,4 +61,27 @@ With our actions defined, let's define our strategy. In this step, we will be fo
 			{atomicAction: 'report', actionArgs: [["DEF:giver", "DEF:pc:location"], ["DEF:giver", "ENEMY:enemy"]]}]);
 ````
 
-Questify will select an object for each unique tag in the actionArgs arrays. By using the same tags as needed, you can define the structure of the quest without actually worrying about EXACTLY which entity they are going to. Questify will handle the tagging of entities for you. Now, upon creating the quest, you can pass in your collection of objects and Questify will select an appropriate object for each unique tag and then make sure that each condition of each action is checked against the properly tagged item! While this might seem like a lot to define one quest, you now have a conditions, actions, and quest structures that you can reuse endlessly. You can create new quests simply and easily and let Questify handle the details.
+Questify will select an object for each unique tag in the actionArgs arrays. By using the same tags as needed, you can define the structure of the quest without actually worrying about EXACTLY which entity they are going to. Questify will handle the tagging of entities for you. Now, upon creating the quest, you can pass in your collection of objects and Questify will select an appropriate object for each unique tag and then make sure that each condition of each action is checked against the properly tagged item! We will pass in the entities in a moment. Let's first define a motivation:
+
+````javascript
+  questGen.motivations.reputation = QUESTIFY.createMotivation([questGen.strategies.killEnemy]);
+````
+
+Motivations are basically just an array of strategies that an npc could use to fulfill that motivation, if they are motivated by that. So let's make an NPC. Note that the way you do this it up to you. All the npc NEEDS is a motivations property that is an array:
+
+````javascript
+  var npc1 = USERTEST.createNPCBase("Quest Giver");
+  npc1.motivations.push(questGen.motivations.reputation);
+````
+
+And now, finally, the quest:
+
+````javascript
+  //the last four arguments must be arrays. Right now, it is hard coded for them to be in this order and to represent those types of entities, but that will be changing
+  //char is the player to assign as the "pc" of the quest
+  var quest = questGen.generateQuest(char, npc1, otherNPCs, enemies, locations, objects);
+````
+
+Now what this will do is generate a quest with "char" as the "DEF:pc", npc1 as the "DEF:giver", and then select appropriate entities from the given arrays of objects to fill out the quest details. The generateQuest method selects a random motivation from the given npc, then a random strategy of that motivation to structure the quest off of.
+
+While this might seem like a lot to define one quest, you now have conditions, actions, and quest structures that you can reuse endlessly. You can create new quests simply and easily and let Questify handle the details.
