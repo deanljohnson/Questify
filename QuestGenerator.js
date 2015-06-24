@@ -17,7 +17,7 @@ var QUESTIFY = (function (QUESTIFY) {
 			return subjectNPC.motivations[index];
 		}
 
-		function parseArgument(arg, variablesObj, otherNPCs, enemies, locations, objects) {
+		function parseArgument(arg, variablesObj, entities) {
 			var pieces = arg.split(':'),
 				type = pieces[0],
 				id = pieces[1],
@@ -36,22 +36,10 @@ var QUESTIFY = (function (QUESTIFY) {
 				return variablesObj[id];
 			} else {
 				//Create the new object
-				switch (type) {
-					case "NPC":
-						optionsArr = otherNPCs;
-						break;
-					case "ENEMY":
-						optionsArr = enemies;
-						break;
-					case "LOC":
-						optionsArr = locations;
-						break;
-					case "OBJ":
-						optionsArr = objects;
-						break;
-					default:
-						console.log("Undefined type assigned to an action argument");
-						break;
+				if (type in entities) {
+					optionsArr = entities[type];
+				} else {
+					console.log("The specified argument" + type + " was not provided in the entities object passed");
 				}
 
 				//create a new variable, randomly selected from the appropriate array
@@ -65,7 +53,7 @@ var QUESTIFY = (function (QUESTIFY) {
 			return variablesObj[id];
 		}
 
-		function parseActionArgs(actionArgs, variablesObj, otherNPCs, enemies, locations, objects) {
+		function parseActionArgs(actionArgs, variablesObj, entities) {
 			var actionArgsAsObjects = [],
 				conditionArgsAsObjects = [];
 
@@ -77,7 +65,7 @@ var QUESTIFY = (function (QUESTIFY) {
 				for (var a = 0, al = currentConditionArgsArr.length; a < al; a++) {
 					var currentArg = currentConditionArgsArr[a];
 
-					conditionArgsAsObjects.push(parseArgument(currentArg, variablesObj, otherNPCs, enemies, locations, objects));
+					conditionArgsAsObjects.push(parseArgument(currentArg, variablesObj, entities));
 				}
 
 				actionArgsAsObjects.push(conditionArgsAsObjects);
@@ -86,7 +74,7 @@ var QUESTIFY = (function (QUESTIFY) {
 			return actionArgsAsObjects;
 		}
 
-		function parseAndExecuteParseAction(parseActionStringArr, variablesObj, otherNPCs, enemies, locations, objects) {
+		function parseAndExecuteParseAction(parseActionStringArr, variablesObj, entities) {
 			if (!(parseActionStringArr[0] in onParseActions)) {
 				console.log("The generation action '" + parseActionStringArr[0] + "' does not exist!");
 				return;
@@ -98,7 +86,7 @@ var QUESTIFY = (function (QUESTIFY) {
 
 			for (var g = 1, gl = parseActionStringArr.length; g < gl; g++) {
 				argString = parseActionStringArr[g];
-				args.push(parseArgument(argString, variablesObj, otherNPCs, enemies, locations, objects));
+				args.push(parseArgument(argString, variablesObj, entities));
 			}
 
 			parseAction.apply(this, args);
@@ -111,7 +99,7 @@ var QUESTIFY = (function (QUESTIFY) {
 		that.conditionFunctions = conditionFunctions;
 		that.onParseActions = onParseActions;
 
-		that.generateQuest = function(player, subjectNPC, otherNPCs, enemies, locations, objects, forcedStrategy) {
+		that.generateQuest = function(player, subjectNPC, entities, forcedStrategy) {
 			var motivation = selectMotivation(subjectNPC),
 				strategy = forcedStrategy || motivation.selectStrategy(),
 				currentActionsAndArgsObj,
@@ -138,11 +126,11 @@ var QUESTIFY = (function (QUESTIFY) {
 
 					//Now add it's arguments
 					actionArgs = currentActionsAndArgsObj.actionArgs;
-					argsArr.push(parseActionArgs(actionArgs, variablesObj, otherNPCs, enemies, locations, objects));
+					argsArr.push(parseActionArgs(actionArgs, variablesObj, entities));
 
 					//If an onParseAction is defined for this action, parse and execute it
 					if ('onParseAction' in currentActionsAndArgsObj) {
-						parseAndExecuteParseAction(currentActionsAndArgsObj.onParseAction, variablesObj, otherNPCs, enemies, locations, objects);
+						parseAndExecuteParseAction(currentActionsAndArgsObj.onParseAction, variablesObj, entities);
 					}
 				}
 			}
