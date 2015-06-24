@@ -95,27 +95,27 @@ var char = USERTEST.createNPCBase("Player Character"),
 (function createStrategies(){
 	questGen.strategies.killEnemy =
 		QUESTIFY.createStrategy([
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "ENEMY:enemy:location"]]},
-			{atomicAction: 'kill',   actionArgs: [["DEF:pc", "ENEMY:enemy:location"], ["ENEMY:enemy"]]},
-			{atomicAction: 'report', actionArgs: [["DEF:pc", "DEF:giver:location"], ["DEF:giver", "ENEMY:enemy"]]}]);
+			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[ENEMY]:'enemy':location"]]},
+			{atomicAction: 'kill',   actionArgs: [["[DEF]:'pc'", "[ENEMY]:'enemy':location"], ["[ENEMY]:'enemy'"]]},
+			{atomicAction: 'report', actionArgs: [["[DEF]:'pc'", "[DEF]:'giver':location"], ["[DEF]:'giver'", "[ENEMY]:'enemy'"]]}]);
 
 	questGen.strategies.explore =
 		QUESTIFY.createStrategy([
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "LOC:poi"]]},
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:giver:location"]]},
-			{atomicAction: 'report', actionArgs: [["DEF:pc", "DEF:giver:location"], ["DEF:giver", "LOC:poi"]]}]);
+			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[LOC]:'poi'"]]},
+			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[DEF]:'giver':location"]]},
+			{atomicAction: 'report', actionArgs: [["[DEF]:'pc'", "[DEF]:'giver':location"], ["[DEF]:'giver'", "[LOC]:'poi'"]]}]);
 
 	questGen.strategies.goAndLearn =
 		QUESTIFY.createStrategy([
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "NPC:otherNPC:location"]]},
-			{atomicAction: 'learn',  actionArgs: [["DEF:pc", "LOC:locInfo"]]}]);
+			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[NPC]:'otherNPC':location"]]},
+			{atomicAction: 'learn',  actionArgs: [["[DEF]:'pc'", "[LOC]:'locInfo'"]]}]);
 
 	questGen.strategies.obtainLuxuries =
 		QUESTIFY.createStrategy([
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "NPC:storeKeeper:location"]]},
-			{atomicAction: 'obtain', actionArgs: [["DEF:pc", "OBJ:luxury"]], onParseAction: ["giveCharItem", "NPC:storeKeeper", "OBJ:luxury"]},
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:giver:location"]]},
-			{atomicAction: 'give',   actionArgs: [["DEF:giver", "DEF:pc", "OBJ:luxury"]]}]);
+			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[NPC]:'storeKeeper':location"]]},
+			{atomicAction: 'obtain', actionArgs: [["[DEF]:'pc'", "[NPC]:'storeKeeper':[inventory]:'luxury'"]]},
+			{atomicAction: 'goto',   actionArgs: [["[DEF]:'pc'", "[DEF]:'giver':location"]]},
+			{atomicAction: 'give',   actionArgs: [["[DEF]:'giver'", "[DEF]:'pc'", "[NPC]:'storeKeeper':[inventory]:'luxury'"]]}]);
 }());
 
 (function createMotivations(){
@@ -274,13 +274,18 @@ function obtainLuxuriesTest() {
 	char = USERTEST.createNPCBase("Player Character");
 	npc1 = USERTEST.createNPCBase("Quest Giver");
 	npc2 = USERTEST.createNPCBase("NPC To Obtain From");
-	item1 = USERTEST.createItemBase("1:1", "Luxury Item");
+	item1 = USERTEST.createItemBase("1:1", "Luxury Item 1");
+	item2 = USERTEST.createItemBase("1:1", "Luxury Item 2");
+	item3 = USERTEST.createItemBase("1:1", "Luxury Item 3");
+
 
 	char.location = loc1;
 	npc1.location = loc1;
 	npc2.location = loc2;
 
-	var quest = questGen.generateQuest(char, npc1, {NPC: [npc2], ENEMY: [], LOC: [], OBJ: [item1]}, questGen.strategies.obtainLuxuries);
+	npc2.inventory = [item1, item2, item3];
+
+	var quest = questGen.generateQuest(char, npc1, {NPC: [npc2], ENEMY: [], LOC: [], OBJ: []}, questGen.strategies.obtainLuxuries);
 
 	quest.updateState();
 	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon generation");
