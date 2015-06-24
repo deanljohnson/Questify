@@ -55,7 +55,7 @@ var char = USERTEST.createNPCBase("Player Character"),
 		return item.location === location;
 	};
 	questGen.conditionFunctions.checkIfCharIsAtLocationAndKnowsInformation = function(somebody, location, info) {
-		return questGen.conditionFunctions.checkIfCharIsAtLocation(somebody, location) && questGen.conditionFunctions.checkIfCharIsAtLocationAndKnowsInformation(somebody, info);
+		return questGen.conditionFunctions.checkIfCharIsAtLocation(somebody, location) && questGen.conditionFunctions.checkIfCharKnowsInformation(somebody, info);
 	};
 }());
 
@@ -97,8 +97,7 @@ var char = USERTEST.createNPCBase("Player Character"),
 		QUESTIFY.createStrategy([
 			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "ENEMY:enemy:location"]]},
 			{atomicAction: 'kill',   actionArgs: [["DEF:pc", "ENEMY:enemy:location"], ["ENEMY:enemy"]]},
-			{atomicAction: 'goto',   actionArgs: [["DEF:pc", "DEF:start"]]},
-			{atomicAction: 'report', actionArgs: [["DEF:giver", "DEF:pc:location"], ["DEF:giver", "ENEMY:enemy"]]}]);
+			{atomicAction: 'report', actionArgs: [["DEF:pc", "DEF:giver:location"], ["DEF:giver", "ENEMY:enemy"]]}]);
 
 	questGen.strategies.explore =
 		QUESTIFY.createStrategy([
@@ -143,8 +142,8 @@ function noSharedStateTest() {
 	char.knownInformation.push(loc1);
 	char.knownInformation.push(loc2);
 
-	var quest = questGen.generateQuest(char, npc1, [], [enemy1], [loc2], []),
-		quest2 = questGen.generateQuest(char, npc1, [], [enemy2], [loc2], []);
+	var quest = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy1], LOC: [loc2], OBJ: []}),
+		quest2 = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy2], LOC: [loc2], OBJ: []});
 
 	quest.updateState();
 	console.log("Quest1: " + quest.isFinished());
@@ -193,7 +192,7 @@ function killEnemyTest() {
 	npc1.location = loc1;
 	enemy1.location = loc2;
 
-	var quest = questGen.generateQuest(char, npc1, [], [enemy1], [loc2], [], questGen.strategies.killEnemy);
+	var quest = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy1], LOC: [loc2], OBJ: []}, questGen.strategies.killEnemy);
 
 	quest.updateState();
 	console.log("KillEnemy Quest: " + quest.isFinished() + " upon generation");
@@ -224,7 +223,7 @@ function exploreTest() {
 	char.location = loc1;
 	npc1.location = loc1;
 
-	var quest = questGen.generateQuest(char, npc1, [], [enemy1], [loc2], [], questGen.strategies.explore);
+	var quest = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy1], LOC: [loc2], OBJ: []}, questGen.strategies.explore);
 
 	quest.updateState();
 	console.log("Explore Quest: " + quest.isFinished() + " upon generation");
@@ -253,7 +252,7 @@ function goAndLearnTest() {
 	loc1 = USERTEST.createLocationBase("1:1", "Quest Start Location");
 	loc1 = USERTEST.createLocationBase("2:2", "Info to Learn");
 
-	var quest = questGen.generateQuest(char, npc1, [npc2], [], [loc2], [], questGen.strategies.goAndLearn);
+	var quest = questGen.generateQuest(char, npc1, {NPC: [npc2], ENEMY: [], LOC: [loc2], OBJ: []}, questGen.strategies.goAndLearn);
 
 	quest.updateState();
 	console.log("GoAndLearn Quest: " + quest.isFinished() + " upon generation");
@@ -281,7 +280,7 @@ function obtainLuxuriesTest() {
 	npc1.location = loc1;
 	npc2.location = loc2;
 
-	var quest = questGen.generateQuest(char, npc1, [npc2], [], [], [item1], questGen.strategies.obtainLuxuries);
+	var quest = questGen.generateQuest(char, npc1, {NPC: [npc2], ENEMY: [], LOC: [], OBJ: [item1]}, questGen.strategies.obtainLuxuries);
 
 	quest.updateState();
 	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon generation");
