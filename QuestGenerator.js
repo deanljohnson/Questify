@@ -149,12 +149,12 @@ var QUESTIFY = (function (QUESTIFY) {
 					}
 
 					//Now add it's arguments
-					actionArgs = currentActionsAndArgsObj.actionArgs;
+					actionArgs = currentActionsAndArgsObj['actionArgs'];
 					argsArr.push(parseActionArgs(actionArgs, variablesObj, entities));
 
 					//If an onParseAction is defined for this action, parse and execute it
-					if ('onParseAction' in currentActionsAndArgsObj) {
-						parseAndExecuteParseAction(currentActionsAndArgsObj.onParseAction, variablesObj, entities);
+					if (currentActionsAndArgsObj.hasOwnProperty('onParseAction')) {
+						parseAndExecuteParseAction(currentActionsAndArgsObj['onParseAction'], variablesObj, entities);
 					}
 				}
 			}
