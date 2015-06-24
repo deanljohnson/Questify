@@ -19,52 +19,20 @@ var QUESTIFY = (function (QUESTIFY) {
 
 		function parseArgument(arg, selectedObj, entities) {
 			var pieces = arg.split(':'),
-				arrString = pieces[0],
-				id = pieces[1],
-				propString,
-				typeArr = [],
-				argObject;
+				piece,
+				previousObject,
+				arrString,
+				id,
+				currentArr,
+				argObject = entities;
 
-			//Remove brackets on the initial array
-			if (arrString.charAt(0) === '[') {
-				arrString = arrString.slice(1, -1);
-			} else {
-				throw new Error(arrString +
-				" is not a valid array identifier and is the first portion of an action argument");
-			}
+			for (var p = 0, pl = pieces.length; p < pl; p++) {
+				previousObject = argObject;
+				piece = pieces[p];
 
-			//Remove single quotes on the initial id
-			if (id.charAt(0) === "'") {
-				id = id.slice(1, -1);
-			} else {
-				throw new Error(id +
-				" is not a valid id identifier and follows an array.");
-			}
-
-			//Check if an entity with this id hasn't been selected before.
-			//If one hasn't been, select it.
-			if (!(selectedObj.hasOwnProperty(id))) {
-				if (!(arrString in entities)) {
-					throw new Error("The specified type: " + arrString + " was not defined in the entities object passed to generateQuest()");
-				}
-
-				typeArr = entities[arrString];
-				selectedObj[id] = typeArr[Math.floor(Math.random() * typeArr.length)];
-			}
-
-			argObject = selectedObj[id];
-
-			//If any specific property was specified, assign that to argObject
-			//Continue until the property chain ends or the object does not have that property
-			for (var p = 2, pl = pieces.length; p < pl; p++) {
-				propString = pieces[p];
-
-				//We have an array and need to select an object
-				if (propString.charAt(0) === "[") {
-
-					//Remove brackets
-					arrString = propString.slice(1, -1);
-					typeArr = argObject[arrString];
+				//We have an array selection to make
+				if (piece.charAt(0) === "[") {
+					arrString = piece.slice(1, -1);
 
 					//increment p so we can get the id value
 					p += 1;
@@ -73,25 +41,36 @@ var QUESTIFY = (function (QUESTIFY) {
 					if (id.charAt(0) === "'") {
 						id = id.slice(1, -1);
 					} else {
-						throw new Error(id +
-						" is not a valid id identifier and follows an array.");
+						//We want to force users to use the quotes to make sure we
+						//can clearly understand their intent here
+						throw new Error(id + " is not a valid id identifier and follows an array.");
 					}
 
-					//If the id has been selected before, use that object, otherwise
-					//Select an object and tag it with id
+					//Must check for the id existing before we do more with the array string,
+					//This way we can handle predefined objects (ie. DEF:pc) easily
 					if (selectedObj.hasOwnProperty(id)) {
 						argObject = selectedObj[id];
 					} else {
+						if (!previousObject.hasOwnProperty(arrString)) {
+							throw new Error(previousObject + " does not have a property of " + arrString);
+						}
+
+						currentArr = previousObject[arrString];
+
 						//Get a random value in the array. Add to selected values to track it
-						argObject = typeArr[Math.floor(Math.random() * typeArr.length)];
+						argObject = currentArr[Math.floor(Math.random() * currentArr.length)];
 						selectedObj[id] = argObject;
 					}
-				} else if (propString.charAt(0) === "'") {
-					throw new Error(propString + " is formatted like an id identifier, but does not follow an array.");
 				}
 				//We have a property access
 				else {
-					argObject = argObject[propString];
+					id = piece;
+
+					if (!previousObject.hasOwnProperty(id)) {
+						throw new Error(previousObject + " does not have a property of " + id);
+					}
+
+					argObject = previousObject[id];
 				}
 			}
 
