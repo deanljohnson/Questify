@@ -17,40 +17,38 @@ var QUESTIFY = (function (QUESTIFY) {
 			return subjectNPC.motivations[index];
 		}
 
-		function parseArgument(arg, variablesObj, entities) {
+		function parseArgument(arg, selectedObj, entities) {
 			var pieces = arg.split(':'),
 				type = pieces[0],
 				id = pieces[1],
-				prop = pieces.length > 2 ? pieces[2] : "NULL PROP",
-				optionsArr = [];
+				propString,
+				typeArr = [],
+				argObject;
 
-			if (pieces.length < 2) {
-				console.log("id not assigned to an action argument");
-			}
-
-			if (variablesObj.hasOwnProperty(id)) {
-				if (prop !== 'NULL PROP' && variablesObj[id].hasOwnProperty(prop)) {
-					return variablesObj[id][prop];
+			//Check if an entity with this id hasn't been selected before.
+			//If one hasn't been, select it.
+			if (!(selectedObj.hasOwnProperty(id))) {
+				if (!(type in entities)) {
+					throw new Error("The specified type: " + type + " was not defined in the entities object passed to generateQuest()");
 				}
 
-				return variablesObj[id];
-			} else {
-				//Create the new object
-				if (type in entities) {
-					optionsArr = entities[type];
-				} else {
-					console.log("The specified argument" + type + " was not provided in the entities object passed");
+				typeArr = entities[type];
+				selectedObj[id] = typeArr[Math.floor(Math.random() * typeArr.length)];
+			}
+
+			argObject = selectedObj[id];
+
+			//If any specific property was specified, assign that to argObject
+			//Continue until the property chain ends or the object does not have that property
+			for (var p = 2, pl = pieces.length; p < pl; p++) {
+				propString = pieces[p];
+
+				if (argObject.hasOwnProperty(propString)) {
+					argObject = argObject[propString];
 				}
-
-				//create a new variable, randomly selected from the appropriate array
-				variablesObj[id] = optionsArr[(Math.floor(Math.random() * optionsArr.length))];
 			}
 
-			if (prop !== 'NULL PROP' && variablesObj[id].hasOwnProperty(prop)) {
-				return variablesObj[id][prop];
-			}
-
-			return variablesObj[id];
+			return argObject;
 		}
 
 		function parseActionArgs(actionArgs, variablesObj, entities) {
