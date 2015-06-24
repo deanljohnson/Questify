@@ -298,7 +298,7 @@ function obtainLuxuriesTest() {
 		console.log("Store Keeper does not have the luxury item in his inventory!");
 	}
 	npc2.inventory = [];
-	char.inventory.push(item1);
+	char.inventory = [item1, item2, item3];
 	quest.updateState();
 	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon char obtaining required item");
 
@@ -307,7 +307,7 @@ function obtainLuxuriesTest() {
 	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon char moving to the location of the quest giver");
 
 	char.inventory = [];
-	npc1.inventory.push(item1);
+	npc1.inventory = [item1, item2, item3];
 	quest.updateState();
 	console.log("ObtainLuxuries Quest: " + quest.isFinished() + " upon char giving item to quest giver");
 
