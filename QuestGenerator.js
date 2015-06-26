@@ -140,6 +140,26 @@ var QUESTIFY = (function (QUESTIFY) {
 			parseAction.apply(this, args);
 		}
 
+		function parseDescription(descriptionStr, variablesObj) {
+			var openBracketIndex = 0, closedBracketIndex = 1;
+			for (var i = 0, il = descriptionStr.length; i < il; i++) {
+				if (descriptionStr.charAt(i) === '[') {
+					openBracketIndex = i;
+				} else if (descriptionStr.charAt(i) === ']') {
+					closedBracketIndex = i;
+
+					var argumentString = descriptionStr.substring(openBracketIndex + 1,
+						closedBracketIndex);
+
+					//Regex matches all text between brackets
+					descriptionStr = descriptionStr.replace(/\[([^]+)\]/,
+						parseArgument(argumentString, variablesObj));
+				}
+			}
+
+			return descriptionStr;
+		}
+
 		that.motivations = motivations;
 		that.strategies = strategies;
 		that.atomicActions = atomicActions;
@@ -151,11 +171,12 @@ var QUESTIFY = (function (QUESTIFY) {
 			var motivation = selectMotivation(subjectNPC),
 				strategy = forcedStrategy || motivation.selectStrategy(),
 				variableDefinitions = strategy.variableDefinitions,
-				currentActionsAndArgsObj,
+				currentActionObject,
 				actionString,
 				actionArgs,
 				actions = [],
 				argsArr = [],
+				descriptions = [],
 				//Initialize variablesObj with Questify's predefined quest variables
 				variablesObj = {pc: player, giver: subjectNPC, start: subjectNPC.location},
 				s, sl;
@@ -166,31 +187,37 @@ var QUESTIFY = (function (QUESTIFY) {
 			}
 
 			//For every action in the strategy, get it's action function and the arguments to that action
-			for (s = 0, sl = strategy.actionsAndArgs.length; s < sl; s++) {
-				currentActionsAndArgsObj = strategy.actionsAndArgs[s];
+			for (s = 0, sl = strategy.actionsObjects.length; s < sl; s++) {
+				currentActionObject = strategy.actionsObjects[s];
 
-				if (currentActionsAndArgsObj.hasOwnProperty('atomicAction')) {
+				if (currentActionObject.hasOwnProperty('atomicAction')) {
 					//Add the current action for this quest
-					actionString = currentActionsAndArgsObj.atomicAction;
+					actionString = currentActionObject.atomicAction;
 					actions.push(atomicActions[actionString]);
 
-					//Check for the existence of arguments
-					if (!('actionArgs' in currentActionsAndArgsObj)) {
+
+					//Process actionArgs
+					if (!currentActionObject.hasOwnProperty('actionArgs')) {
 						throw new Error(actionString + " wasn't given any arguments to pass to it's condition functions!");
+					} else {
+						//Now add it's arguments
+						actionArgs = currentActionObject['actionArgs'];
+						argsArr.push(parseActionArgs(actionArgs, variablesObj));
 					}
 
-					//Now add it's arguments
-					actionArgs = currentActionsAndArgsObj['actionArgs'];
-					argsArr.push(parseActionArgs(actionArgs, variablesObj));
+					//Process onParseAction's
+					if (currentActionObject.hasOwnProperty('onParseAction')) {
+						parseAndExecuteParseAction(currentActionObject['onParseAction'], variablesObj);
+					}
 
-					//If an onParseAction is defined for this action, parse and execute it
-					if (currentActionsAndArgsObj.hasOwnProperty('onParseAction')) {
-						parseAndExecuteParseAction(currentActionsAndArgsObj['onParseAction'], variablesObj);
+					//Process descriptions
+					if (currentActionObject.hasOwnProperty('description')) {
+						descriptions.push(parseDescription(currentActionObject['description'], variablesObj));
 					}
 				}
 			}
 
-			return QUESTIFY.createQuest(actions, argsArr);
+			return QUESTIFY.createQuest(strategy, actions, argsArr, descriptions);
 		};
 
 		return that;
