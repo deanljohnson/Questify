@@ -3,7 +3,7 @@
  */
 
 var QUESTIFY = (function (QUESTIFY) {
-	function createQuestGenerator() {
+	function createQuestGenerator(tagSplitter) {
 		var that = {},
 			motivations = {},
 			strategies = {},
@@ -12,22 +12,22 @@ var QUESTIFY = (function (QUESTIFY) {
 			conditionFunctions = {},
 			onParseActions = {};
 
+		tagSplitter = tagSplitter || ':';
+
 		function selectMotivation(subjectNPC) {
 			var index = Math.floor(Math.random() * subjectNPC.motivations.length);
 			return subjectNPC.motivations[index];
 		}
 
-		function defineVariable(arg, variablesObj, entities) {
-			var pieces = arg.split(':'),
+		function defineVariable(arg, selectedObjects, entities) {
+			var pieces = arg.split(tagSplitter),
 				piece,
-				previousObject,
 				arrString,
 				id,
 				currentArr,
 				argObject = entities;
 
 			for (var p = 0, pl = pieces.length; p < pl; p++) {
-				previousObject = argObject;
 				piece = pieces[p];
 
 				//We have an array selection to make
@@ -46,31 +46,29 @@ var QUESTIFY = (function (QUESTIFY) {
 						throw new Error(id + " is not a valid id identifier and follows an array.");
 					}
 
-					//Must check for the id existing before we do more with the array string,
-					//This way we can handle predefined objects (ie. DEF:pc) easily
-					if (variablesObj.hasOwnProperty(id)) {
-						argObject = variablesObj[id];
+					if (selectedObjects.hasOwnProperty(id)) {
+						argObject = selectedObjects[id];
 					} else {
-						if (!previousObject.hasOwnProperty(arrString)) {
-							throw new Error(previousObject + " does not have a property of " + arrString);
+						if (!argObject.hasOwnProperty(arrString)) {
+							throw new Error(argObject + " does not have a property of " + arrString);
 						}
 
-						currentArr = previousObject[arrString];
+						currentArr = argObject[arrString];
 
-						//Get a random value in the array. Add to selected values to track it
+						//Get a random value in the array. Add to selected values to track it.
 						argObject = currentArr[Math.floor(Math.random() * currentArr.length)];
-						variablesObj[id] = argObject;
+						selectedObjects[id] = argObject;
 					}
 				}
 				//We have a property access
 				else {
 					id = piece;
 
-					if (!previousObject.hasOwnProperty(id)) {
-						throw new Error(previousObject + " does not have a property of " + id);
+					if (!argObject.hasOwnProperty(id)) {
+						throw new Error(argObject + " does not have a property of " + id);
 					}
 
-					argObject = previousObject[id];
+					argObject = argObject[id];
 				}
 			}
 
@@ -79,7 +77,7 @@ var QUESTIFY = (function (QUESTIFY) {
 
 		function parseArgument(arg, variablesObj) {
 			var tag, prop, argPieces, argObject;
-			argPieces = arg.split(":");
+			argPieces = arg.split(tagSplitter);
 			tag = argPieces[0];
 
 			if (!variablesObj.hasOwnProperty(tag)) {
@@ -141,12 +139,17 @@ var QUESTIFY = (function (QUESTIFY) {
 		}
 
 		function parseDescription(descriptionStr, variablesObj) {
-			var openBracketIndex = 0, closedBracketIndex = 1;
+			var openBracketIndex = 0, closedBracketIndex = 0;
 			for (var i = 0, il = descriptionStr.length; i < il; i++) {
 				if (descriptionStr.charAt(i) === '[') {
 					openBracketIndex = i;
 				} else if (descriptionStr.charAt(i) === ']') {
 					closedBracketIndex = i;
+
+					if (closedBracketIndex < openBracketIndex) {
+						throw new Error("'" + descriptionStr + "' is not a valid description string." +
+						" A closed bracket was found before a matching opened bracket.");
+					}
 
 					var argumentString = descriptionStr.substring(openBracketIndex + 1,
 						closedBracketIndex);
