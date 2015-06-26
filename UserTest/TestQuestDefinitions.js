@@ -339,9 +339,9 @@ function descriptionTest() {
 
 	var quest = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy1], LOC: [loc2], OBJ: []}, questGen.strategies.killEnemy);
 
-	console.log(quest.getDescription(0));
-	console.log(quest.getDescription(1));
-	console.log(quest.getDescription(2));
-	console.log(quest.getDescription(3));
+	console.log(quest.getActionDescription(0));
+	console.log(quest.getActionDescription(1));
+	console.log(quest.getActionDescription(2));
+	console.log(quest.getActionDescription(3));
 }
 descriptionTest();
