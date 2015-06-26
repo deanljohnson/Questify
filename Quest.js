@@ -83,6 +83,7 @@ var QUESTIFY = (function (QUESTIFY) {
 		that.questFinishedCallback = questFinishedCallback;
 		that.getActionDescription = getActionDescription;
 		that.setActionDescription = setActionDescription;
+		that.getActionStatus = getActionStatus;
 
 		return that;
 	}
