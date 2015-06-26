@@ -67,6 +67,7 @@ var QUESTIFY = (function (QUESTIFY) {
 				if (finishedMap[a] === false) {
 					finishedMap[a] = (action.update(argumentsArr[a]) === true);
 
+					//Update might have changed state
 					if (finishedMap[a] === false) { return; }
 					if (finishedMap[a] === true) { reportActionFinished(action, argumentsArr[a]); }
 				}
