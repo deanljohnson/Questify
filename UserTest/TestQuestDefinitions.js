@@ -95,9 +95,12 @@ var char = USERTEST.createNPCBase("Player Character"),
 (function createStrategies(){
 	questGen.strategies.killEnemy =
 		QUESTIFY.createStrategy(["[ENEMY]:'enemy'"],
-			[{atomicAction: 'goto',   actionArgs: [["pc", "enemy:location"]]},
-			 {atomicAction: 'kill',   actionArgs: [["pc", "enemy:location"], ["enemy"]]},
-			 {atomicAction: 'report', actionArgs: [["pc", "giver:location"], ["giver", "enemy"]]}]);
+			[{atomicAction: 'goto',   actionArgs: [["pc", "enemy:location"]],
+				 description: "Go to [enemy:location:name]"},
+			 {atomicAction: 'kill',   actionArgs: [["pc", "enemy:location"], ["enemy"]],
+				 description: "Kill [enemy:name], mercilessly"},
+			 {atomicAction: 'report', actionArgs: [["pc", "giver:location"], ["giver", "enemy"]],
+				 description: "Report back to [giver:name]"}]);
 
 	questGen.strategies.explore =
 		QUESTIFY.createStrategy(["[LOC]:'poi'"],
@@ -138,6 +141,7 @@ function noSharedStateTest() {
 	npc1.location = loc1;
 	char.location = loc1;
 	enemy1.location = loc2;
+	enemy2.location = loc2;
 
 	char.knownInformation.push(loc1);
 	char.knownInformation.push(loc2);
@@ -315,3 +319,25 @@ function obtainLuxuriesTest() {
 	console.log(quest.isFinished());
 }
 obtainLuxuriesTest();
+
+function descriptionTest() {
+	char = USERTEST.createNPCBase("Player Character");
+	npc1 = USERTEST.createNPCBase("Ivan Idorshed");
+	enemy1 = USERTEST.createNPCBase("Kane");
+	loc1 = USERTEST.createLocationBase("1:1", "Quest Start Location");
+	loc2 = USERTEST.createLocationBase("2:2", "The Forded Hilltop");
+
+	npc1.motivations.push(questGen.motivations.reputation);
+
+	char.location = loc1;
+	npc1.location = loc1;
+	enemy1.location = loc2;
+
+	var quest = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy1], LOC: [loc2], OBJ: []}, questGen.strategies.killEnemy);
+
+	console.log(quest.getDescription(0));
+	console.log(quest.getDescription(1));
+	console.log(quest.getDescription(2));
+	console.log(quest.getDescription(3));
+}
+descriptionTest();
