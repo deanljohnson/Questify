@@ -38,8 +38,27 @@ var QUESTIFY = (function (QUESTIFY) {
 			return (finishedMap.length !== 0) ? finishedCount/finishedMap.length : 0;
 		}
 
-		that.actions = actions;
-		that.argumentsArr = argumentsArr;
+		function getActionDescription(actionNumber) {
+			if (actionNumber < descriptions.length && actionNumber >= 0) {
+				return descriptions[actionNumber];
+			}
+
+			return "";
+		}
+
+		function setActionDescription(actionNumber, description) {
+			if (actionNumber < descriptions.length && actionNumber >= 0) {
+				description[actionNumber] = description;
+			}
+		}
+
+		function getActionStatus(actionNumber) {
+			if (actionNumber < finishedMap.length && actionNumber >= 0) {
+				return finishedMap[actionNumber];
+			}
+
+			return false;
+		}
 
 		that.updateState = function() {
 			var action;
@@ -60,6 +79,8 @@ var QUESTIFY = (function (QUESTIFY) {
 		that.completionPercentage = completionPercentage;
 		that.actionFinishedCallback = actionFinishedCallback;
 		that.questFinishedCallback = questFinishedCallback;
+		that.getActionDescription = getActionDescription;
+		that.setActionDescription = setActionDescription;
 
 		return that;
 	}
