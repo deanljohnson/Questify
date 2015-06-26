@@ -200,22 +200,26 @@ function killEnemyTest() {
 
 	quest.updateState();
 	console.log("KillEnemy Quest: " + quest.isFinished() + " upon generation");
+	console.log("KillEnemy Quest Completion: " + quest.completionPercentage());
 
 	char.location = enemy1.location;
 	enemy1.isAlive = false;
 	quest.updateState();
 	console.log("KillEnemy Quest: " + quest.isFinished() + " upon char moving to enemy and killing him");
+	console.log("KillEnemy Quest Completion: " + quest.completionPercentage());
 
 	char.location = npc1.location;
 	quest.updateState();
 	console.log("KillEnemy Quest: " + quest.isFinished() + " upon returning to start");
+	console.log("KillEnemy Quest Completion: " + quest.completionPercentage());
 
 	npc1.knownInformation.push(enemy1);
 	quest.updateState();
 	console.log("KillEnemy Quest: " + quest.isFinished() + " upon reporting back to quest giver");
+	console.log("KillEnemy Quest Completion: " + quest.completionPercentage());
 
 	console.log("KillEnemy Quest: Overall Test Results: ");
-	console.log(quest.isFinished());
+	console.log(quest.isFinished() && (quest.completionPercentage() === 1));
 }
 killEnemyTest();
 
