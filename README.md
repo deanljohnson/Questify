@@ -62,6 +62,7 @@ With our actions defined, let's define our strategy. In this step, we will be fo
 First, we start off by defining tags that we will need in setting the arguments to the startegies actions. "[ENEMY]:'enemy'" tells Questify to randomly select an object from the ENTITY array that you will pass to the generateQuest method and assign it the the tag of "enemy". Now, when defining the actions for this strategy, we can reference that tag, such as when we enter "enemy:location", which tells questify to find the enemy tag and access it's location property. 
 
 Questify also defines three tags on it's own:
+
 1. pc === the player, standing for player character
 2. giver === the npc that it giving the player the quest
 3. start === the location at which the quest started
