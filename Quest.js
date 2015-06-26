@@ -4,7 +4,7 @@
 
 var QUESTIFY = (function (QUESTIFY) {
 	"use strict";
-	function createQuest (actions, argumentsArr) {
+	function createQuest (strategy, actions, argumentsArr, descriptions) {
 		var that = {},
 			finishedMap = new Array(actions.length),
 			actionFinishedCallback = function () {},
@@ -75,6 +75,8 @@ var QUESTIFY = (function (QUESTIFY) {
 			if (isFinished()) { reportQuestFinished(); }
 		};
 
+		that.actions = actions;
+		that.strategy = strategy;
 		that.isFinished = isFinished;
 		that.completionPercentage = completionPercentage;
 		that.actionFinishedCallback = actionFinishedCallback;
