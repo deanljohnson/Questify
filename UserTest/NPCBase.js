@@ -4,7 +4,7 @@
 
 var USERTEST = (function (USERTEST) {
 	"use strict";
-	function createNPCBase(name) {
+	function createNPCBase(name, location) {
 		var that = {},
 			motivations = [];
 
@@ -12,7 +12,7 @@ var USERTEST = (function (USERTEST) {
 		that.isAlive = true;
 		that.knownInformation = [];
 		that.motivations = motivations;
-		that.location = {};
+		that.location = location || {};
 		that.inventory = [];
 
 		that.selectMotivation = function() {
