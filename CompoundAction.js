@@ -4,40 +4,26 @@
 
 var QUESTIFY = (function (QUESTIFY) {
 	"use strict";
-	function createCompoundAction (preCondition, postCondition, subActions) {
-		var that = QUESTIFY.createAtomicAction(preCondition, postCondition);
+	function createCompoundAction (actionSeries, conditionFunctions) {
+		var that = {};
 
-		that.actions = actions;
+		that.actionSeries = actionSeries;
 
-		that.isFinished = function() {
-			if (!(that.finished === true)) { return false; }
-			for (var a = 0, al = subActions.length; a < al; a++) {
-				if (!subActions[a].isFinished()) {
-					return false;
+		that.update = function(actionSeriesIndex, conditionArrArr) {
+			var finished = true;
+
+			for (var c = 0, cl = this.conditions.length; c < cl; c++) {
+				if (this.conditions[c].apply(this, conditionArrArr[c]) !== true) {
+					finished = false;
+					return;
 				}
 			}
-			return true;
-		};
 
-		that.withArguments = function(pre, post) {
-			var newValue = {};
-			newValue.preCondition = this.preCondition;
-			newValue.postCondition = this.postCondition;
-			newValue.preConditionMet = this.preConditionMet;
-			newValue.postConditionMet = this.postConditionMet;
-			newValue.start = this.start;
-			newValue.finish = this.finish;
-			newValue.isStarted = this.isStarted;
-			newValue.isFinished = this.isFinished;
-			newValue.started = false;
-			newValue.finished = false;
+			if (finished) { return finished; }
 
-			newValue.preConditionArguments = pre;
-			newValue.postConditionArguments = post;
 
-			newValue.actions = this.actions;
 
-			return newValue;
+			return finished;
 		};
 
 		return that;
