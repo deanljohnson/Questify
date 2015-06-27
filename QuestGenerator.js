@@ -163,31 +163,24 @@ var QUESTIFY = (function (QUESTIFY) {
 			return descriptionStr;
 		}
 
-		that.motivations = motivations;
-		that.strategies = strategies;
-		that.atomicActions = atomicActions;
-		that.compoundActions = compoundActions;
-		that.conditionFunctions = conditionFunctions;
-		that.onParseActions = onParseActions;
+		function parseTagMapping(tagMapping, variablesObj) {
+			var pieces = tagMapping.split(":"),
+				parentTag = pieces[0],
+				childTag = pieces[1];
 
-		that.generateQuest = function(player, subjectNPC, entities, forcedStrategy) {
-			var motivation = selectMotivation(subjectNPC),
-				strategy = forcedStrategy || motivation.selectStrategy(),
-				variableDefinitions = strategy.variableDefinitions,
-				currentActionObject,
-				actionString,
-				actionArgs,
-				actions = [],
-				argsArr = [],
-				descriptions = [],
-				//Initialize variablesObj with Questify's predefined quest variables
-				variablesObj = {pc: player, giver: subjectNPC, start: subjectNPC.location},
-				s, sl;
-
-			//Parse variable definitions
-			for (var v = 0, vl = variableDefinitions.length; v < vl; v++) {
-				defineVariable(variableDefinitions[v], variablesObj, entities);
+			if (pieces.length !== 2) {
+				console.log("Expected to see two parts in the tag mapping " + tagMapping);
 			}
+
+			if (!variablesObj.hasOwnProperty(parentTag)) {
+				console.log("The parent tag of '" + parentTag + "' was not defined for this strategy");
+			}
+
+			variablesObj[childTag] = variablesObj[parentTag];
+		}
+
+		function processStrategy(strategy, variablesObj, actions, argsArr, descriptions) {
+			var currentActionObject, actionString, actionArgs, s, sl;
 
 			//For every action in the strategy, get it's action function and the arguments to that action
 			for (s = 0, sl = strategy.actionsObjects.length; s < sl; s++) {
@@ -217,8 +210,41 @@ var QUESTIFY = (function (QUESTIFY) {
 					if (currentActionObject.hasOwnProperty('description')) {
 						descriptions.push(parseDescription(currentActionObject['description'], variablesObj));
 					}
+				} else if (currentActionObject.hasOwnProperty("strategy")) {
+					if (!currentActionObject.hasOwnProperty("tagMapping")) {
+						throw new Error(currentActionObject + " does not have a tag mapping for a sub-strategy");
+					}
+
+					parseTagMapping(currentActionObject["tagMapping"], variablesObj);
+
+					processStrategy(strategies[currentActionObject["strategy"]], variablesObj, actions, argsArr, descriptions);
 				}
 			}
+		}
+
+		that.motivations = motivations;
+		that.strategies = strategies;
+		that.atomicActions = atomicActions;
+		that.compoundActions = compoundActions;
+		that.conditionFunctions = conditionFunctions;
+		that.onParseActions = onParseActions;
+
+		that.generateQuest = function(player, subjectNPC, entities, forcedStrategy) {
+			var motivation = selectMotivation(subjectNPC),
+				strategy = forcedStrategy || motivation.selectStrategy(),
+				variableDefinitions = strategy.variableDefinitions,
+				actions = [],
+				argsArr = [],
+				descriptions = [],
+				//Initialize variablesObj with Questify's predefined quest variables
+				variablesObj = {pc: player, giver: subjectNPC, start: subjectNPC.location};
+
+			//Parse variable definitions
+			for (var v = 0, vl = variableDefinitions.length; v < vl; v++) {
+				defineVariable(variableDefinitions[v], variablesObj, entities);
+			}
+
+			processStrategy(strategy, variablesObj, actions, argsArr, descriptions);
 
 			return QUESTIFY.createQuest(strategy, actions, argsArr, descriptions);
 		};
