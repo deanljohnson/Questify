@@ -95,30 +95,48 @@ var char = USERTEST.createNPCBase("Player Character"),
 (function createStrategies(){
 	questGen.strategies.killEnemy =
 		QUESTIFY.createStrategy(["[ENEMY]:'enemy'"],
-			[{atomicAction: 'goto',   actionArgs: [["pc", "enemy:location"]],
+			[{atomicAction: "goto",
+				 actionArgs: [["pc", "enemy:location"]],
 				 description: "Go to [enemy:location:name]"},
-			 {atomicAction: 'kill',   actionArgs: [["pc", "enemy:location"], ["enemy"]],
+			 {atomicAction: "kill",
+				 actionArgs: [["pc", "enemy:location"], ["enemy"]],
 				 description: "Kill [enemy:name], mercilessly"},
-			 {atomicAction: 'report', actionArgs: [["pc", "giver:location"], ["giver", "enemy"]],
+			 {atomicAction: "report",
+				 actionArgs: [["pc", "giver:location"], ["giver", "enemy"]],
 				 description: "Report back to [giver:name]"}]);
 
 	questGen.strategies.explore =
 		QUESTIFY.createStrategy(["[LOC]:'poi'"],
-			[{atomicAction: 'goto',   actionArgs: [["pc", "poi"]]},
-			 {atomicAction: 'goto',   actionArgs: [["pc", "giver:location"]]},
-			 {atomicAction: 'report', actionArgs: [["pc", "giver:location"], ["giver", "poi"]]}]);
+			[{atomicAction: 'goto',
+				 actionArgs: [["pc", "poi"]],
+				 description: "Go explore [poi:name]"},
+			 {atomicAction: 'report',
+				 actionArgs: [["pc", "giver:location"], ["giver", "poi"]],
+			     description: "Report back to [giver:name]"}]);
 
 	questGen.strategies.goAndLearn =
 		QUESTIFY.createStrategy(["[NPC]:'otherNPC'", "[LOC]:'locInfo'"],
-			[{atomicAction: 'goto',   actionArgs: [["pc", "otherNPC:location"]]},
-			 {atomicAction: 'learn',  actionArgs: [["pc", "locInfo"]]}]);
+			[{atomicAction: 'goto',
+				 actionArgs: [["pc", "otherNPC:location"]],
+				 description: "Go to [otherNPC:location:name]"},
+			 {atomicAction: 'learn',
+				 actionArgs: [["pc", "locInfo"]],
+			     description: "Talk to [otherNPC:name] to learn about [locInfo:name]"}]);
 
 	questGen.strategies.obtainLuxuries =
 		QUESTIFY.createStrategy(["[NPC]:'storeKeeper':[inventory]:'luxury'"],
-			[{atomicAction: 'goto',   actionArgs: [["pc", "storeKeeper:location"]]},
-			 {atomicAction: 'obtain', actionArgs: [["pc", "luxury"]]},
-			 {atomicAction: 'goto',   actionArgs: [["pc", "giver:location"]]},
-			 {atomicAction: 'give',   actionArgs: [["giver", "pc", "luxury"]]}]);
+			[{atomicAction: 'goto',
+				 actionArgs: [["pc", "storeKeeper:location"]],
+				 description: "Go to [storeKeeper:location:name]"},
+			 {atomicAction: 'obtain',
+				 actionArgs: [["pc", "luxury"]],
+			     description: "Purchase [luxury:name]"},
+			 {atomicAction: 'goto',
+				 actionArgs: [["pc", "giver:location"]],
+			     description: "Return to [giver:name]"},
+			 {atomicAction: 'give',
+				 actionArgs: [["giver", "pc", "luxury"]],
+			     description: "Give [luxury:name] to [giver:name]"}]);
 }());
 
 (function createMotivations(){
@@ -255,10 +273,10 @@ exploreTest();
 
 function goAndLearnTest() {
 	char = USERTEST.createNPCBase("Player Character");
-	npc1 = USERTEST.createNPCBase("Quest Giver");
-	npc2 = USERTEST.createNPCBase("NPC To Learn From");
 	loc1 = USERTEST.createLocationBase("1:1", "Quest Start Location");
-	loc1 = USERTEST.createLocationBase("2:2", "Info to Learn");
+	loc2 = USERTEST.createLocationBase("2:2", "Info to Learn");
+	npc1 = USERTEST.createNPCBase("Quest Giver");
+	npc2 = USERTEST.createNPCBase("NPC To Learn From", loc2);
 
 	var quest = questGen.generateQuest(char, npc1, {NPC: [npc2], ENEMY: [], LOC: [loc2], OBJ: []}, questGen.strategies.goAndLearn);
 
@@ -343,5 +361,7 @@ function descriptionTest() {
 	console.log(quest.getActionDescription(1));
 	console.log(quest.getActionDescription(2));
 	console.log(quest.getActionDescription(3));
+	console.log("Description Test: OverallTest Results: ");
+	console.log(quest.getActionDescription(0).length > 0 && quest.getActionDescription(3).length === 0);
 }
 descriptionTest();
