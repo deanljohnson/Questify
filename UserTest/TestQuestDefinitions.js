@@ -12,9 +12,9 @@ var char = USERTEST.createNPCBase("Player Character"),
 	loc1 = USERTEST.createLocationBase("1:1"),
 	loc2 = USERTEST.createLocationBase("2:2"),
 	loc3 = USERTEST.createLocationBase("3:3"),
-	item1 = USERTEST.createItemBase("1:1", "Item 1"),
-	item2 = USERTEST.createItemBase("2:2", "Item 2"),
-	item3 = USERTEST.createItemBase("3:3", "Item 3"),
+	item1 = USERTEST.createItemBase("Item 1"),
+	item2 = USERTEST.createItemBase("Item 2"),
+	item3 = USERTEST.createItemBase("Item 3"),
 	questGen = QUESTIFY.createQuestGenerator();
 
 (function createConditionFunctions(){
@@ -70,77 +70,112 @@ var char = USERTEST.createNPCBase("Player Character"),
 }());
 
 (function createAtomicActions(){
-	questGen.atomicActions.goto = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation]);
+	questGen.actionBlueprints.goto = QUESTIFY.createActionBlueprint([questGen.conditionFunctions.checkIfCharIsAtLocation]);
 
-	questGen.atomicActions.kill = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,
+	questGen.actionBlueprints.kill = QUESTIFY.createActionBlueprint([questGen.conditionFunctions.checkIfCharIsAtLocation,
 															  questGen.conditionFunctions.checkIfCharIsDead]);
 
-	questGen.atomicActions.report = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,
+	questGen.actionBlueprints.report = QUESTIFY.createActionBlueprint([questGen.conditionFunctions.checkIfCharIsAtLocation,
 														        questGen.conditionFunctions.checkIfCharKnowsInformation]);
 
-	questGen.atomicActions.capture = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasPrisoner]);
+	questGen.actionBlueprints.capture = QUESTIFY.createActionBlueprint([questGen.conditionFunctions.checkIfCharHasPrisoner]);
 
-	questGen.atomicActions.give = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasItemAndOtherDoesNot]);
+	questGen.actionBlueprints.give = QUESTIFY.createActionBlueprint([questGen.conditionFunctions.checkIfCharHasItemAndOtherDoesNot]);
 
-	questGen.atomicActions.take = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasItemAndOtherDoesNot]);
+	questGen.actionBlueprints.take = QUESTIFY.createActionBlueprint([questGen.conditionFunctions.checkIfCharHasItemAndOtherDoesNot]);
 
-	questGen.atomicActions.gather = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,
+	questGen.actionBlueprints.gather = QUESTIFY.createActionBlueprint([questGen.conditionFunctions.checkIfCharIsAtLocation,
 							                                    questGen.conditionFunctions.checkIfCharHasItem]);
 
-	questGen.atomicActions.learn = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharKnowsInformation]);
+	questGen.actionBlueprints.learn = QUESTIFY.createActionBlueprint([questGen.conditionFunctions.checkIfCharKnowsInformation]);
 
-	questGen.atomicActions.obtain = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharHasItem]);
+	questGen.actionBlueprints.obtain = QUESTIFY.createActionBlueprint([questGen.conditionFunctions.checkIfCharHasItem]);
+}());
+
+(function createCompoundActions(){
+	questGen.compoundActions.get = QUESTIFY.createCompoundAction([
+		[questGen.actionBlueprints.goto, questGen.actionBlueprints.gather],
+		[questGen.actionBlueprints.goto, questGen.actionBlueprints.take, questGen.actionBlueprints.goto]]);
+
+	questGen.compoundActions.kill = QUESTIFY.createCompoundAction([
+		[questGen.actionBlueprints.goto, questGen.actionBlueprints.kill],
+		[questGen.actionBlueprints.goto, questGen.actionBlueprints.gather, questGen.actionBlueprints.goto, questGen.actionBlueprints.kill]]);
+
+	questGen.compoundActions.steal = QUESTIFY.createCompoundAction(
+		[
+			[questGen.actionBlueprints.goto, questGen.actionBlueprints.kill, questGen.actionBlueprints.take]
+		],
+		[
+			[questGen.conditionFunctions.checkIfCharHasItemAndOtherDoesNot]
+		]
+		);
 }());
 
 (function createStrategies(){
 	questGen.strategies.killEnemy =
 		QUESTIFY.createStrategy(["[ENEMY]:'enemy'"],
-			[{atomicAction: "goto",
+			[{actionBlueprint: "goto",
 				 actionArgs: [["pc", "enemy:location"]],
 				 description: "Go to [enemy:location:name]"},
-			 {atomicAction: "kill",
+			 {actionBlueprint: "kill",
 				 actionArgs: [["pc", "enemy:location"], ["enemy"]],
-				 description: "Kill [enemy:name], mercilessly"},
-			 {atomicAction: "report",
+				 description: "Kill [enemy:name], mercilessly"}]);
+
+	questGen.strategies.killEnemyAndReport =
+		QUESTIFY.createStrategy(["[ENEMY]:'enemy'"],
+			[{strategy: "killEnemy",
+				 tagMapping: "enemy:enemy"},
+			 {actionBlueprint: "report",
 				 actionArgs: [["pc", "giver:location"], ["giver", "enemy"]],
 				 description: "Report back to [giver:name]"}]);
 
 	questGen.strategies.explore =
 		QUESTIFY.createStrategy(["[LOC]:'poi'"],
-			[{atomicAction: 'goto',
+			[{actionBlueprint: 'goto',
 				 actionArgs: [["pc", "poi"]],
 				 description: "Go explore [poi:name]"},
-			 {atomicAction: 'report',
+			 {actionBlueprint: 'report',
 				 actionArgs: [["pc", "giver:location"], ["giver", "poi"]],
 			     description: "Report back to [giver:name]"}]);
 
 	questGen.strategies.goAndLearn =
 		QUESTIFY.createStrategy(["[NPC]:'otherNPC'", "[LOC]:'locInfo'"],
-			[{atomicAction: 'goto',
+			[{actionBlueprint: 'goto',
 				 actionArgs: [["pc", "otherNPC:location"]],
 				 description: "Go to [otherNPC:location:name]"},
-			 {atomicAction: 'learn',
+			 {actionBlueprint: 'learn',
 				 actionArgs: [["pc", "locInfo"]],
 			     description: "Talk to [otherNPC:name] to learn about [locInfo:name]"}]);
 
 	questGen.strategies.obtainLuxuries =
 		QUESTIFY.createStrategy(["[NPC]:'storeKeeper':[inventory]:'luxury'"],
-			[{atomicAction: 'goto',
+			[{actionBlueprint: 'goto',
 				 actionArgs: [["pc", "storeKeeper:location"]],
 				 description: "Go to [storeKeeper:location:name]"},
-			 {atomicAction: 'obtain',
+			 {actionBlueprint: 'obtain',
 				 actionArgs: [["pc", "luxury"]],
 			     description: "Purchase [luxury:name]"},
-			 {atomicAction: 'goto',
+			 {actionBlueprint: 'goto',
 				 actionArgs: [["pc", "giver:location"]],
 			     description: "Return to [giver:name]"},
-			 {atomicAction: 'give',
+			 {actionBlueprint: 'give',
 				 actionArgs: [["giver", "pc", "luxury"]],
 			     description: "Give [luxury:name] to [giver:name]"}]);
+
+	questGen.strategies.murderAndRetrieve =
+		QUESTIFY.createStrategy(["[ENEMY]:'enemy':[inventory]:'goalItem'"],
+			[{strategy: "killEnemy",
+				tagMapping: "enemy:enemy"},
+			 {actionBlueprint: "take",
+			     actionArgs: [["pc", "enemy", "goalItem"]],
+			     description: "Take [goalItem:name] off of [enemy:name]'s corpse"},
+			 {actionBlueprint: 'give',
+				 actionArgs: [["giver", "pc", "goalItem"]],
+				 description: "Return [goalItem:name] to [giver:name]"}]);
 }());
 
 (function createMotivations(){
-	questGen.motivations.reputation = QUESTIFY.createMotivation([questGen.strategies.killEnemy]);
+	questGen.motivations.reputation = QUESTIFY.createMotivation([questGen.strategies.killEnemyAndReport, questGen.strategies.murderAndRetrieve]);
 	questGen.motivations.knowledge = QUESTIFY.createMotivation([questGen.strategies.explore, questGen.strategies.goAndLearn]);
 	questGen.motivations.comfort = QUESTIFY.createMotivation([questGen.strategies.obtainLuxuries]);
 }());
@@ -164,8 +199,8 @@ function noSharedStateTest() {
 	char.knownInformation.push(loc1);
 	char.knownInformation.push(loc2);
 
-	var quest = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy1], LOC: [loc2], OBJ: []}),
-		quest2 = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy2], LOC: [loc2], OBJ: []});
+	var quest = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy1], LOC: [loc2], OBJ: []}, questGen.strategies.killEnemyAndReport),
+		quest2 = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy2], LOC: [loc2], OBJ: []}, questGen.strategies.killEnemyAndReport);
 
 	quest.updateState();
 	console.log("Quest1: " + quest.isFinished());
@@ -201,7 +236,7 @@ function noSharedStateTest() {
 }
 noSharedStateTest();
 
-function killEnemyTest() {
+function killEnemyAndReportTest() {
 	char = USERTEST.createNPCBase("Player Character");
 	npc1 = USERTEST.createNPCBase("Quest Giver");
 	enemy1 = USERTEST.createNPCBase("Enemy To Kill");
@@ -214,32 +249,32 @@ function killEnemyTest() {
 	npc1.location = loc1;
 	enemy1.location = loc2;
 
-	var quest = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy1], LOC: [loc2], OBJ: []}, questGen.strategies.killEnemy);
+	var quest = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy1], LOC: [loc2], OBJ: []}, questGen.strategies.killEnemyAndReport);
 
 	quest.updateState();
-	console.log("KillEnemy Quest: " + quest.isFinished() + " upon generation");
-	console.log("KillEnemy Quest Completion: " + quest.completionPercentage());
+	console.log("killEnemyAndReport Quest: " + quest.isFinished() + " upon generation");
+	console.log("killEnemyAndReport Quest Completion: " + quest.completionPercentage());
 
 	char.location = enemy1.location;
 	enemy1.isAlive = false;
 	quest.updateState();
-	console.log("KillEnemy Quest: " + quest.isFinished() + " upon char moving to enemy and killing him");
-	console.log("KillEnemy Quest Completion: " + quest.completionPercentage());
+	console.log("killEnemyAndReport Quest: " + quest.isFinished() + " upon char moving to enemy and killing him");
+	console.log("killEnemyAndReport Quest Completion: " + quest.completionPercentage());
 
 	char.location = npc1.location;
 	quest.updateState();
-	console.log("KillEnemy Quest: " + quest.isFinished() + " upon returning to start");
-	console.log("KillEnemy Quest Completion: " + quest.completionPercentage());
+	console.log("killEnemyAndReport Quest: " + quest.isFinished() + " upon returning to start");
+	console.log("killEnemyAndReport Quest Completion: " + quest.completionPercentage());
 
 	npc1.knownInformation.push(enemy1);
 	quest.updateState();
-	console.log("KillEnemy Quest: " + quest.isFinished() + " upon reporting back to quest giver");
-	console.log("KillEnemy Quest Completion: " + quest.completionPercentage());
+	console.log("killEnemyAndReport Quest: " + quest.isFinished() + " upon reporting back to quest giver");
+	console.log("killEnemyAndReport Quest Completion: " + quest.completionPercentage());
 
-	console.log("KillEnemy Quest: Overall Test Results: ");
+	console.log("killEnemyAndReport Quest: Overall Test Results: ");
 	console.log(quest.isFinished() && (quest.completionPercentage() === 1));
 }
-killEnemyTest();
+killEnemyAndReportTest();
 
 function exploreTest() {
 	char = USERTEST.createNPCBase("Player Character");
@@ -300,9 +335,9 @@ function obtainLuxuriesTest() {
 	char = USERTEST.createNPCBase("Player Character");
 	npc1 = USERTEST.createNPCBase("Quest Giver");
 	npc2 = USERTEST.createNPCBase("NPC To Obtain From");
-	item1 = USERTEST.createItemBase("1:1", "Luxury Item 1");
-	item2 = USERTEST.createItemBase("1:1", "Luxury Item 2");
-	item3 = USERTEST.createItemBase("1:1", "Luxury Item 3");
+	item1 = USERTEST.createItemBase("Luxury Item 1");
+	item2 = USERTEST.createItemBase("Luxury Item 2");
+	item3 = USERTEST.createItemBase("Luxury Item 3");
 
 
 	char.location = loc1;
@@ -349,19 +384,16 @@ function descriptionTest() {
 	loc1 = USERTEST.createLocationBase("1:1", "Quest Start Location");
 	loc2 = USERTEST.createLocationBase("2:2", "The Forded Hilltop");
 
-	npc1.motivations.push(questGen.motivations.reputation);
-
 	char.location = loc1;
 	npc1.location = loc1;
 	enemy1.location = loc2;
 
-	var quest = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy1], LOC: [loc2], OBJ: []}, questGen.strategies.killEnemy);
+	var quest = questGen.generateQuest(char, npc1, {NPC: [], ENEMY: [enemy1], LOC: [loc2], OBJ: []}, questGen.strategies.killEnemyAndReport);
 
 	console.log(quest.getActionDescription(0));
 	console.log(quest.getActionDescription(1));
 	console.log(quest.getActionDescription(2));
 	console.log(quest.getActionDescription(3));
-	console.log("Description Test: OverallTest Results: ");
+	console.log("Description Test: Overall Test Results: ");
 	console.log(quest.getActionDescription(0).length > 0 && quest.getActionDescription(3).length === 0);
 }
-descriptionTest();
