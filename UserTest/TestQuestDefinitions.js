@@ -393,9 +393,8 @@ function descriptionTest() {
 	console.log(quest.getActionDescription(0));
 	console.log(quest.getActionDescription(1));
 	console.log(quest.getActionDescription(2));
-	console.log(quest.getActionDescription(3));
 	console.log("Description Test: Overall Test Results: ");
-	console.log(quest.getActionDescription(0).length > 0 && quest.getActionDescription(3).length === 0);
+	console.log(quest.getActionDescription(0).length > 0);
 }
 descriptionTest();
 
