@@ -397,3 +397,43 @@ function descriptionTest() {
 	console.log("Description Test: Overall Test Results: ");
 	console.log(quest.getActionDescription(0).length > 0 && quest.getActionDescription(3).length === 0);
 }
+descriptionTest();
+
+function murderAndRetrieveTest() {
+	char = USERTEST.createNPCBase("Player Character");
+	npc1 = USERTEST.createNPCBase("Ivan Idorshed");
+	loc1 = USERTEST.createLocationBase("1:1", "Quest Start Location");
+	loc2 = USERTEST.createLocationBase("2:2", "The Forded Hilltop");
+	enemy1 = USERTEST.createNPCBase("Kane", loc2);
+	item1 = USERTEST.createItemBase("Rare Jewels");
+
+	enemy1.inventory = [item1];
+
+	var quest = questGen.generateQuest(char, npc1, {ENEMY: [enemy1], LOC: [loc1, loc2]}, questGen.strategies.murderAndRetrieve);
+
+	quest.updateState();
+	console.log("MurderAndRetrieveTest Quest: " + quest.isFinished() + " upon generation");
+
+	char.location = loc2;
+	quest.updateState();
+	console.log("MurderAndRetrieveTest Quest: " + quest.isFinished() + " upon char moving to enemy");
+
+	enemy1.isAlive = false;
+	quest.updateState();
+	console.log("MurderAndRetrieveTest Quest: " + quest.isFinished() + " upon killing enemy");
+
+	char.inventory = [enemy1.inventory[0]];
+	enemy1.inventory = [];
+	quest.updateState();
+	console.log("MurderAndRetrieveTest Quest: " + quest.isFinished() + " upon taking item");
+
+	char.location = npc1.location;
+	npc1.inventory = [char.inventory[0]];
+	char.inventory = [];
+	quest.updateState();
+	console.log("MurderAndRetrieveTest Quest: " + quest.isFinished() + " upon giving item to the quest giver");
+
+	console.log("MurderAndRetrieveTest Quest: Overall Test Results: ");
+	console.log(quest.isFinished());
+}
+murderAndRetrieveTest();
