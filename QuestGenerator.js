@@ -7,7 +7,7 @@ var QUESTIFY = (function (QUESTIFY) {
 		var that = {},
 			motivations = {},
 			strategies = {},
-			atomicActions = {},
+			actionBlueprints = {},
 			compoundActions = {},
 			conditionFunctions = {},
 			onParseActions = {};
@@ -164,7 +164,7 @@ var QUESTIFY = (function (QUESTIFY) {
 		}
 
 		function parseTagMapping(tagMapping, variablesObj) {
-			var pieces = tagMapping.split(":"),
+			var pieces = tagMapping.split(tagSplitter),
 				parentTag = pieces[0],
 				childTag = pieces[1];
 
@@ -186,10 +186,10 @@ var QUESTIFY = (function (QUESTIFY) {
 			for (s = 0, sl = strategy.actionsObjects.length; s < sl; s++) {
 				currentActionObject = strategy.actionsObjects[s];
 
-				if (currentActionObject.hasOwnProperty('atomicAction')) {
+				if (currentActionObject.hasOwnProperty('actionBlueprint')) {
 					//Add the current action for this quest
-					actionString = currentActionObject.atomicAction;
-					actions.push(atomicActions[actionString]);
+					actionString = currentActionObject.actionBlueprint;
+					actions.push(actionBlueprints[actionString]);
 
 
 					//Process actionArgs
@@ -224,7 +224,7 @@ var QUESTIFY = (function (QUESTIFY) {
 
 		that.motivations = motivations;
 		that.strategies = strategies;
-		that.atomicActions = atomicActions;
+		that.actionBlueprints = actionBlueprints;
 		that.compoundActions = compoundActions;
 		that.conditionFunctions = conditionFunctions;
 		that.onParseActions = onParseActions;
