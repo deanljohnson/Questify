@@ -2,6 +2,12 @@
  * Created by Dean on 6/22/2015.
  */
 
+/**
+ * Deprecated, not PLANNED for further development,
+ * but will currently stay in the code base in-case
+ * this idea needs to be revisited
+ */
+/
 var QUESTIFY = (function (QUESTIFY) {
 	"use strict";
 	function createCompoundAction (actionSeries, conditionFunctions) {
