@@ -4,7 +4,7 @@
 
 var QUESTIFY = (function (QUESTIFY) {
 	"use strict";
-	function createAtomicAction (conditionFunctions) {
+	function createActionBlueprint (conditionFunctions) {
 		var that = {};
 
 		that.conditions = conditionFunctions;
