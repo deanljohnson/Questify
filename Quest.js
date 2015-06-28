@@ -4,7 +4,7 @@
 
 var QUESTIFY = (function (QUESTIFY) {
 	"use strict";
-	function createQuest (strategy, actions, argumentsArr, descriptions) {
+	function createQuest (strategy, actions) {
 		var that = {},
 			finishedMap = new Array(actions.length),
 			actionFinishedCallback = function () {},
@@ -20,8 +20,8 @@ var QUESTIFY = (function (QUESTIFY) {
 			questFinishedCallback();
 		}
 
-		function reportActionFinished(finishedAction, args) {
-			actionFinishedCallback(finishedAction, args);
+		function reportActionFinished(finishedAction) {
+			actionFinishedCallback(finishedAction);
 		}
 
 		function isFinished() {
@@ -38,20 +38,6 @@ var QUESTIFY = (function (QUESTIFY) {
 			return (finishedMap.length !== 0) ? finishedCount/finishedMap.length : 0;
 		}
 
-		function getActionDescription(actionNumber) {
-			if (actionNumber < descriptions.length && actionNumber >= 0) {
-				return descriptions[actionNumber];
-			}
-
-			return "";
-		}
-
-		function setActionDescription(actionNumber, description) {
-			if (actionNumber < descriptions.length && actionNumber >= 0) {
-				description[actionNumber] = description;
-			}
-		}
-
 		function getActionStatus(actionNumber) {
 			if (actionNumber < finishedMap.length && actionNumber >= 0) {
 				return finishedMap[actionNumber];
@@ -60,16 +46,20 @@ var QUESTIFY = (function (QUESTIFY) {
 			return false;
 		}
 
+		function getActionDescription(actionNumber) {
+			return actions[actionNumber].description;
+		}
+
 		that.updateState = function() {
 			var action;
 			for (var a = 0, al = actions.length; a < al; a++) {
 				action = actions[a];
 				if (finishedMap[a] === false) {
-					finishedMap[a] = (action.update(argumentsArr[a]) === true);
+					finishedMap[a] = (action.update() === true);
 
 					//Update might have changed state
 					if (finishedMap[a] === false) { return; }
-					if (finishedMap[a] === true) { reportActionFinished(action, argumentsArr[a]); }
+					if (finishedMap[a] === true) { reportActionFinished(action); }
 				}
 			}
 
@@ -83,7 +73,6 @@ var QUESTIFY = (function (QUESTIFY) {
 		that.actionFinishedCallback = actionFinishedCallback;
 		that.questFinishedCallback = questFinishedCallback;
 		that.getActionDescription = getActionDescription;
-		that.setActionDescription = setActionDescription;
 		that.getActionStatus = getActionStatus;
 
 		return that;
