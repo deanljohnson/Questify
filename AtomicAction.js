@@ -14,7 +14,6 @@ var QUESTIFY = (function (QUESTIFY) {
 
 			for (var c = 0, cl = this.conditions.length; c < cl; c++) {
 				if (this.conditions[c].apply(this, conditionArrArr[c]) !== true) {
-					finished = false;
 					return;
 				}
 			}
