@@ -25,7 +25,24 @@ var QUESTIFY = (function (QUESTIFY) {
 		return that;
 	}
 
-	QUESTIFY.createAtomicAction = createAtomicAction;
+	function AtomicAction (actionBlueprint, argumentsArr, description) {
+		this.conditions = actionBlueprint.conditionFunctions;
+		this.conditionArguments = argumentsArr;
+		this.description = description;
+	}
+
+	AtomicAction.prototype.update = function() {
+		for (var c = 0, cl = this.conditions.length; c < cl; c++) {
+			if (this.conditions[c].apply(this, this.conditionArguments[c]) !== true) {
+				return false;
+			}
+		}
+
+		return true;
+	};
+
+	QUESTIFY.AtomicAction = AtomicAction;
+	QUESTIFY.createActionBlueprint = createActionBlueprint;
 
 	return QUESTIFY;
 }(QUESTIFY || {}));
