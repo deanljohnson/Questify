@@ -4,10 +4,9 @@
 
 var USERTEST = (function (USERTEST) {
 	"use strict";
-	function createItemBase(pos, name) {
+	function createItemBase(name) {
 		var that = {};
 
-		that.position = pos || "0:0";
 		that.name = name || "";
 
 		return that;
