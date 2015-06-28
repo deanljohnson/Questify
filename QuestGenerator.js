@@ -179,37 +179,43 @@ var QUESTIFY = (function (QUESTIFY) {
 			variablesObj[childTag] = variablesObj[parentTag];
 		}
 
+		function parseActionObject(actionObject, variablesObj) {
+			var actionString = actionObject.actionBlueprint,
+				actionBlueprint = actionBlueprints[actionString],
+				argumentsArr = [],
+				description = "";
+
+			//Process actionArgs
+			if (!actionObject.hasOwnProperty('actionArgs')) {
+				throw new Error(actionString + " wasn't given any arguments to pass to it's condition functions!");
+			} else {
+				//Now add it's arguments
+				argumentsArr = (parseActionArgs(actionObject['actionArgs'], variablesObj));
+			}
+
+			//Process descriptions
+			if (actionObject.hasOwnProperty('description')) {
+				description = (parseDescription(actionObject['description'], variablesObj));
+			}
+
+			//Process onParseAction's
+			if (actionObject.hasOwnProperty('onParseAction')) {
+				parseAndExecuteParseAction(actionObject['onParseAction'], variablesObj);
+			}
+
+			return new QUESTIFY.AtomicAction(actionBlueprint, argumentsArr, description);
+		}
+
 		function processStrategy(strategy, variablesObj, actions, argsArr, descriptions) {
-			var currentActionObject, actionString, actionArgs, s, sl;
+			var currentActionObject, s, sl;
 
 			//For every action in the strategy, get it's action function and the arguments to that action
 			for (s = 0, sl = strategy.actionsObjects.length; s < sl; s++) {
 				currentActionObject = strategy.actionsObjects[s];
 
 				if (currentActionObject.hasOwnProperty('actionBlueprint')) {
-					//Add the current action for this quest
-					actionString = currentActionObject.actionBlueprint;
-					actions.push(actionBlueprints[actionString]);
-
-
-					//Process actionArgs
-					if (!currentActionObject.hasOwnProperty('actionArgs')) {
-						throw new Error(actionString + " wasn't given any arguments to pass to it's condition functions!");
-					} else {
-						//Now add it's arguments
-						actionArgs = currentActionObject['actionArgs'];
-						argsArr.push(parseActionArgs(actionArgs, variablesObj));
-					}
-
-					//Process onParseAction's
-					if (currentActionObject.hasOwnProperty('onParseAction')) {
-						parseAndExecuteParseAction(currentActionObject['onParseAction'], variablesObj);
-					}
-
-					//Process descriptions
-					if (currentActionObject.hasOwnProperty('description')) {
-						descriptions.push(parseDescription(currentActionObject['description'], variablesObj));
-					}
+					var action = parseActionObject(currentActionObject, variablesObj);
+					actions.push(action);
 				} else if (currentActionObject.hasOwnProperty("strategy")) {
 					if (!currentActionObject.hasOwnProperty("tagMapping")) {
 						throw new Error(currentActionObject + " does not have a tag mapping for a sub-strategy");
@@ -246,7 +252,7 @@ var QUESTIFY = (function (QUESTIFY) {
 
 			processStrategy(strategy, variablesObj, actions, argsArr, descriptions);
 
-			return QUESTIFY.createQuest(strategy, actions, argsArr, descriptions);
+			return QUESTIFY.createQuest(strategy, actions);
 		};
 
 		return that;
