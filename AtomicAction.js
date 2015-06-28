@@ -9,35 +9,27 @@ var QUESTIFY = (function (QUESTIFY) {
 
 		that.conditions = conditionFunctions;
 
-		that.update = function(conditionArrArr) {
-			var finished = true;
-
-			for (var c = 0, cl = this.conditions.length; c < cl; c++) {
-				if (this.conditions[c].apply(this, conditionArrArr[c]) !== true) {
-					return;
-				}
-			}
-
-			return finished;
-		};
-
 		return that;
 	}
 
 	function AtomicAction (actionBlueprint, argumentsArr, description) {
-		this.conditions = actionBlueprint.conditionFunctions;
+		this.conditions = actionBlueprint.conditions;
 		this.conditionArguments = argumentsArr;
 		this.description = description;
+		this.finished = false;
 	}
 
 	AtomicAction.prototype.update = function() {
+		this.finished = true;
+
 		for (var c = 0, cl = this.conditions.length; c < cl; c++) {
 			if (this.conditions[c].apply(this, this.conditionArguments[c]) !== true) {
-				return false;
+				this.finished = false;
+				return;
 			}
 		}
 
-		return true;
+		return this.finished;
 	};
 
 	QUESTIFY.AtomicAction = AtomicAction;
