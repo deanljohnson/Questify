@@ -15,11 +15,10 @@ For example, lets define a quest to kill an enemy. This quest will require four 
 Actions 1 and 3 are essentially the same, but with different targets. The conditions for a "go-to" action are simple: is the character there? In code we can define this as follows:
 
 ````javascript
-  questGen.conditionFunctions.checkIfCharIsAtLocation = function(somebody, location) {
-		return somebody.location === location;
-	};
-	
-	questGen.atomicActions.goto = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation]);
+questGen.conditionFunctions.checkIfCharIsAtLocation = function(somebody, location) {
+	return somebody.location === location;
+};
+questGen.atomicActions.goto = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation]);
 ````
 
 The exact parameters for the action will be set later. Right now we have just defined a generic goto action and it's condition.
@@ -27,26 +26,28 @@ The exact parameters for the action will be set later. Right now we have just de
 Kill Definition:
 
 ````javascript
-  //checkIfCharIsAtLocation is defined above
-  
-	questGen.conditionFunctions.checkIfCharIsDead = function(somebody) {
-		return !somebody.isAlive;
-	};
+//checkIfCharIsAtLocation is defined above
+questGen.conditionFunctions.checkIfCharIsDead = function(somebody) {
+	return !somebody.isAlive;
+};
 	
-questGen.atomicActions.kill = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,				                                			   					   questGen.conditionFunctions.checkIfCharIsDead]);
+questGen.atomicActions.kill = QUESTIFY.createAtomicAction(
+	[questGen.conditionFunctions.checkIfCharIsAtLocation,				                              
+	 questGen.conditionFunctions.checkIfCharIsDead]);
 ````
 
 Report Definition
 
 ````javascript
-  //checkIfCharIsAtLocation is defined above
+//checkIfCharIsAtLocation is defined above
   
-	questGen.conditionFunctions.checkIfCharKnowsInformation = function(somebody, info) {
-		return somebody.knownInformation.indexOf(info) !== -1;
-	};
+questGen.conditionFunctions.checkIfCharKnowsInformation = function(somebody, info) {
+	return somebody.knownInformation.indexOf(info) !== -1;
+};
 	
-	questGen.atomicActions.kill = QUESTIFY.createAtomicAction([questGen.conditionFunctions.checkIfCharIsAtLocation,
-                                                    		   questGen.conditionFunctions.checkIfCharKnowsInformation]);
+questGen.atomicActions.report = QUESTIFY.createAtomicAction(
+	[questGen.conditionFunctions.checkIfCharIsAtLocation,
+	 questGen.conditionFunctions.checkIfCharKnowsInformation]);
 ````
 
 With our actions defined, let's define our strategy. In this step, we will be formatting the arguments to each of the actions as well:
@@ -72,7 +73,7 @@ Questify will automatically pass the appropriate object to the condition functio
 Now we can define a motivation:
 
 ````javascript
-  questGen.motivations.reputation = QUESTIFY.createMotivation([questGen.strategies.killEnemy]);
+questGen.motivations.reputation = QUESTIFY.createMotivation([questGen.strategies.killEnemy]);
 ````
 
 Motivations are basically just an array of strategies that an npc could use to fulfill that motivation. Upon quest generation, you will provide Questify with a NPC with a motivations property. Questify will then randomly select a strategy from a randomly selected motivation and build a quest based off of that.
@@ -80,15 +81,15 @@ Motivations are basically just an array of strategies that an npc could use to f
 So let's make an NPC. Note that the way you do this it up to you. All the npc NEEDS is a motivations property that is an array:
 
 ````javascript
-  var npc1 = USERTEST.createNPCBase("Quest Giver");
-  npc1.motivations.push(questGen.motivations.reputation);
+var npc1 = USERTEST.createNPCBase("Quest Giver");
+npc1.motivations.push(questGen.motivations.reputation);
 ````
 
 And now, finally, the quest:
 
 ````javascript
- //npcsArr, enemyArr, and locationsArr are arrays of your games objects that you define
-  var quest = questGen.generateQuest(char, npc1, {NPCS: npcsArr, ENEMY: enemyArr, LOC: locationsArr});
+//npcsArr, enemyArr, and locationsArr are arrays of your games objects that you define
+var quest = questGen.generateQuest(char, npc1, {NPCS: npcsArr, ENEMY: enemyArr, LOC: locationsArr});
 ````
 
 Now what this will do is generate a quest with the "pc" tag set to reference the "char" object, and the "giver" tag set to referene the "npc1" object. The quest will be populated with details based on the object you pass in as the third parameter. In our example, we really only need the "ENEMY: enemyArr" portion, but in a system with more strategies we would have to pass arrays that could give Questify data for any possible startegy that gets selected, so it's a good practice to simply pass them all.
